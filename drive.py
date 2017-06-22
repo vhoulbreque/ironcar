@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import rospy
 from std_msgs.msg import String
 import Adafruit_PCA9685
@@ -21,7 +22,7 @@ def pic_cb(data):
     image_name = save_folder + 'frame_'+ str(n_img) + '_gas_' + str(curr_gas) + '_dir_'
     image_name += str(curr_dir) +"_xacc_" + str(x) + "_yacc_" + str(y) + "_zacc_" + str(z) +'_' + '.jpg'
     cam.capture(image_name, quality=10, resize=(250,150))
-    img_nb += 1
+    n_img += 1
 
 def dir_cb(data):
 
@@ -117,8 +118,8 @@ def initialize_motor():
             commands['drive'] = drive
             break
 
-class ArgumentError(Exception):
-    print('Error in arguments !')
+#class ArgumentError(Exception):
+#    print('Error in arguments !')
 
 
 def main():
@@ -129,7 +130,7 @@ def main():
 
     rospy.init_node('drive', anonymous=True)
 
-    if controls in ['kb', 'keyboard']:
+    if controls in ['k', 'kb', 'keyboard']:
         print('Using keyboard')
         rospy.Subscriber("dir_gas", String, callback)
         rospy.Subscriber("pic", String, pic_cb)
@@ -142,8 +143,10 @@ def main():
         rospy.Subscriber("gas", Float32, gas_cb)
         rospy.Subscriber("pic", String, pic_cb)
         rospy.Subscriber("rev", Bool, change_dir_cb)
+        rospy.spin()
     elif controls in ['auto', 'autopilot']:
-        print('Running in autopilot !')
+    
+    	print('Running in autopilot !')
         # TODO
 
 
@@ -165,14 +168,11 @@ if __name__ == '__main__':
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     save_folder = str(ct) + '/'
 
-    # Camera setup
-    cam = picamera.PiCamera()
     n_img = 0
 
     # cam setup
     print('Setting up the pi camera')
     cam = picamera.PiCamera()
-    cam_output = picamera.array.PiRGBArray(cam)
     print('Pi camera set up')
 
     # PWM setup
@@ -190,14 +190,17 @@ if __name__ == '__main__':
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
-            raise ArgumentError
+            print('0')
+            #raise ArgumentError
         if arg in ['-c', '--controls']:
             if i+1 >= len(arguments):
-                raise ArgumentError
+                print('1')
+                #raise ArgumentError
             controls = arguments[i+1]
+            #print(controls)
             if controls not in ['k', 'keyboard', 'gd', 'gamepad', 'auto', 'autopilot']:
                 print('These controls do not exist')
-                raise ArgumentError
+                #raise ArgumentError
             i += 1
         if arg in ['-i', '--init-motor']:
             init_motor = True
