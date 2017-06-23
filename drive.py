@@ -25,7 +25,7 @@ pwm.set_pwm_freq(60)
 
 def pic_cb(data):
 
-    global n_img, curr_gas, curr_dir, drive, bno
+    global n_img, curr_gas, curr_dir, drive, bno, save_folder
 
     x, y, z = bno.read_linear_acceleration()
     image_name = save_folder + 'frame_'+ str(n_img) + '_gas_' + str(curr_gas) + '_dir_'
