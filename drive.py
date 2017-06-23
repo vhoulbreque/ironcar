@@ -28,8 +28,10 @@ def pic_cb(data):
     global n_img, curr_gas, curr_dir, drive, bno, save_folder
 
     x, y, z = bno.read_linear_acceleration()
-    image_name = save_folder + 'frame_'+ str(n_img) + '_gas_' + str(curr_gas) + '_dir_'
-    image_name += str(curr_dir) +"_xacc_" + str(x) + "_yacc_" + str(y) + "_zacc_" + str(z) +'_' + '.jpg'
+    image_name = os.path.join(save_folder, 'frame_'+ str(n_img) + '_gas_' +
+                                str(curr_gas) + '_dir_' + str(curr_dir) +
+                                "_xacc_" + str(x) + "_yacc_" + str(y) +
+                                "_zacc_" + str(z) +'_' + '.jpg')
     cam.capture(image_name, quality=10, resize=(250,150))
     n_img += 1
 
@@ -216,7 +218,7 @@ if __name__ == '__main__':
                 'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5}
 
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    save_folder = str(ct) + '/'
+    save_folder = os.path.join('videos/', str(ct))
 
     n_img = 0
 
