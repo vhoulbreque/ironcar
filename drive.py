@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+"""
+
+drive.py receives control commands (from keyboard, gamepad or autopilot,
+handled by remote_controller) and gives input to the car.
+
+Launched on the Raspberry Pi
+
+"""
+
 import sys
 import rospy
 from std_msgs.msg import String
@@ -196,7 +205,8 @@ if __name__ == '__main__':
     commands = {'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                 'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360,
                 'drive_max': 420, 'reverse': False, 'rev_neutral': 380,
-                'rev_drive': 370, 'rev_drive_max': 360, 'rev_stop': 400}
+                'rev_drive': 370, 'rev_drive_max': 360, 'rev_stop': 400,
+                'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5}
 
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     save_folder = str(ct) + '/'

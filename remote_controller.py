@@ -1,3 +1,15 @@
+"""
+
+The remote controller obviously controls the car from distance.
+3 modes are available:
+    - keyboard controls with the directional keys (UP, DOWN, LEFT and RIGHT)
+    - gamepad controller (only tested with XBox 360 controller)
+    - autopilot (which is not a remote control...)
+
+Launched on the laptop.
+
+"""
+
 import os
 import time
 import sys
@@ -6,6 +18,23 @@ import rospy
 from Tkinter import *
 from inputs import get_gamepad
 from std_msgs.msg import String, Float32, Bool
+
+import time
+import sys
+import picamera
+import picamera.array
+import numpy as np
+import Adafruit_PCA9685
+import tensorflow as tf
+import numpy as np
+import rospy
+import roslib
+import scipy.misc
+
+from PIL import Image
+from sensor_msgs.msg import CompressedImage
+from std_msgs.msg import String
+from keras.models import load_model
 
 
 # Keyboard controller
@@ -89,6 +118,46 @@ class Application(Frame):
         self.left.pack({"side": "left"})
 
 
+def callback_autopilot(data):
+    global graph, model, commands, com_pub
+
+    drive_t, stop_t, left_t, right_t = commands['go'], commands['stop'],
+                                        commands['left'], commands['drive']
+
+    print('received image')
+    np_arr = np.fromstring(data.data, np.uint8).reshape(1, 150, 250, 3)
+
+    # tensorflow returns a bug if there is no graph...
+    with graph.as_default():
+        prediction = model.predict(np_arr)
+
+    prediction = prediction[0]
+    print('prediction : ', prediction)
+
+    # gas
+    predicted_gas = prediction[0]
+    if predicted_gas > drive_t:
+        curr_gas = 'up'
+    elif predicted_gas < stop_t:
+        curr_gas = 'down'
+    else:
+        curr_gas = 'upreleased'
+
+    # dir
+    predicted_dir = prediction[1]
+    if predicted_dir > right_t:
+        curr_dir = 'right'
+    elif predicted_dir < left_t:
+        curr_dir = 'left'
+    else:
+        curr_dir = 'leftreleased'
+
+    com_pub.publish(curr_gas)
+    com_pub.publish(curr_dir)
+
+    print('current direction: ', curr_dir, ' current gas: ', curr_gas)
+
+
 def main(controller):
 
     if controller == 'keyboard':
@@ -138,13 +207,30 @@ def main(controller):
                     print('Switching direction')
                     gp_rev_pub.publish(True)
 
+    elif controller == 'autopilot':
+        print('Autopilot is ready')
+
+        rospy.init_node('autopilot', anonymous=True)
+        com_pub = rospy.Publisher('dir_gas', String, queue_size=20)
+        sub = rospy.Subscriber("/camera", CompressedImage, callback_autopilot, queue_size=1000)
+        rospy.spin()
+
+class ArgumentError(Exception):
+    print('Error in arguments !')
+
 
 if __name__ == '__main__':
 
-    possible_arguments = ['-k', '--keyboard', '-g', '--gamepad']
+    possible_arguments = ['-k', '--keyboard', '-g', '--gamepad',
+                          '-a', '--autopilot', '-m', '--model',
+                          '-c', '--commands_folder']
     arguments = sys.argv[1:]
 
     controller = 'keyboard'
+    model_path = 'autopilot_2.hdf5'
+    commands = {'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5,
+                    'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
+                    'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360}
 
     i = 0
     while i < len(arguments):
@@ -155,6 +241,31 @@ if __name__ == '__main__':
             controller = 'keyboard'
         if arg in ['-g', '--gamepad']:
             controller = 'gamepad'
+        if arg in ['-a', '--autopilot']:
+            controller = 'autopilot'
+        if arg in ['-m', '--model']:
+            if i+1 >= len(arguments):
+                raise ArgumentError
+            model_path = arguments[i+1]
+            if not os.path.isfile(model_path):
+                print('This path does not exist : {}'.format(model_path))
+                raise ArgumentError
+            i += 1
+        if arg in ['-c', '--commands-folder']:
+            if i+1 >= len(arguments):
+                raise ArgumentError
+            command_file = arguments[i+1]
+            if not os.isfile(command_file):
+                print('No command_file found at : ', command_file)
+                print('Using default thresholds')
+            else:
+                commands = load_commands(command_file)
+                # TODO
+            i += 1
         i += 1
+
+    if controller == 'autopilot':
+        model = load_model(model_path)
+        graph = tf.get_default_graph()
 
     main(controller)
