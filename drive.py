@@ -101,6 +101,8 @@ def callback(data):
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])
         curr_dir = 0
     elif received_command == "up":
+        print('commands[gas] : ', commands['gas'])
+        print('commands[drive] : ', commands['drive'])
         pwm.set_pwm(commands['gas'], 0 , commands['drive'])
         curr_gas = 0.5
     elif received_command == "down":
