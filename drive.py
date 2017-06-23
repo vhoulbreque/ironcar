@@ -101,13 +101,36 @@ def callback(data):
         pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
         curr_gas = 0
 
-def initialize_motor():
-    global step, commands, bno, xacc_threshold
+# IMU setup
+def initialize_imu(xacc_threshold):
+    global bno
+
+    bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
+
+    # Sometimes, the IMU does not initialize correctly the first time
+    n_loop = 5
+    for i in range(0, n_loop):
+        try:
+            if not bno.begin():
+                raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+            else:
+                print("Initialized IMU correctly")
+                break
+        except:
+            if i == 4 :
+                print("Failed initializing IMU {} times, aborting. Please check the IMU connection".format(n_loop))
+            else:
+                print("Failed initializing IMU, trying again")
+
+
+def initialize_motor(xacc_threshold):
+    global step, commands, bno
 
     x = 0
     for k in range(0, 50, step):
         print(x)
         pwm.set_pwm(2, 0 , 360 + k)
+        # TODO: what if there is not imu ?
         x, y, z = bno.read_linear_acceleration()
         time.sleep(0.3)
         if x > xacc_threshold:
@@ -118,8 +141,8 @@ def initialize_motor():
             commands['drive'] = drive
             break
 
-#class ArgumentError(Exception):
-#    print('Error in arguments !')
+class ArgumentError(Exception):
+   print('Error in arguments !')
 
 
 def main():
@@ -130,35 +153,45 @@ def main():
 
     rospy.init_node('drive', anonymous=True)
 
-    if controls in ['k', 'kb', 'keyboard']:
+    if controls == 'keyboard':
         print('Using keyboard')
         rospy.Subscriber("dir_gas", String, callback)
         rospy.Subscriber("pic", String, pic_cb)
         print("Ready, entering loop")
         rospy.spin()
-    elif controls in ['gp', 'gamepad']:
+    elif controls == 'gamepad':
         print('Using gamepad')
         rospy.init_node('drive', anonymous=True)
         rospy.Subscriber("dir", Float32, dir_cb)
         rospy.Subscriber("gas", Float32, gas_cb)
         rospy.Subscriber("pic", String, pic_cb)
         rospy.Subscriber("rev", Bool, change_dir_cb)
+        print("Ready, entering loop")
         rospy.spin()
-    elif controls in ['auto', 'autopilot']:
-    
+    elif controls == 'autopilot':
     	print('Running in autopilot !')
-        # TODO
+        rospy.loginfo("Launching listener")
+        rospy.init_node('drive', anonymous=True)
+        rospy.Subscriber("dir_gas", String, callback)
+        print("Ready, entering loop")
+        rospy.spin()
 
+    else:
+        print('No controller has been set: \n'
+              'Current controller is {}'.format(controls))
 
 
 if __name__ == '__main__':
 
-    possible_arguments = ['-c', '--controls', '-i', '--init-motor',
-                            '-s', '--save-folder']
+    possible_arguments = ['-k', '--keyboard', '-a', '--autopilot', '-g',
+                          '--gamepad', '-i', '--init-motor', '-s',
+                          '--save-folder', '--no-imu']
     arguments = sys.argv[1:]
 
-    controls = 'gamepad'
+    controls = 'keyboard'
     init_motor = False
+    init_imu = True
+
     # TODO
     commands = {'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                 'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360,
@@ -186,25 +219,26 @@ if __name__ == '__main__':
     curr_dir = 0
     curr_gas = 0
 
+    #IMU params
+    xacc_threshold = 0.2
+    bno = None
+
     i = 0
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
-            print('0')
-            #raise ArgumentError
-        if arg in ['-c', '--controls']:
-            if i+1 >= len(arguments):
-                print('1')
-                #raise ArgumentError
-            controls = arguments[i+1]
-            #print(controls)
-            if controls not in ['k', 'keyboard', 'gd', 'gamepad', 'auto', 'autopilot']:
-                print('These controls do not exist')
-                #raise ArgumentError
-            i += 1
-        if arg in ['-i', '--init-motor']:
+            raise ArgumentError
+        elif arg in ['--no-imu']:
+            init_imu = False
+        elif arg in ['-k', '--keyboard']:
+            controls = 'keyboard'
+        elif arg in ['-g', '--gamepad']:
+            controls = 'gamepad'
+        elif arg in ['-a', '--autopilot']:
+            controls = 'autopilot'
+        elif arg in ['-i', '--init-motor']:
             init_motor = True
-        if arg in ['-s', '--save-file']:
+        elif arg in ['-s', '--save-file']:
             if i+1 >= len(arguments):
                 print('No save file has been given.')
                 print('Using the default one : ', save_folder)
@@ -215,13 +249,10 @@ if __name__ == '__main__':
             i += 1
         i += 1
 
-    # IMU setup
-    xacc_threshold = 0.2
-    bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
-    if not bno.begin():
-        raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+    if init_imu:
+        initialize_imu(xacc_threshold)
 
     if init_motor:
-        initialize_motor()
+        initialize_motor(xacc_threshold)
 
     main()
