@@ -87,7 +87,8 @@ def change_dir_cb(data):
 
 def callback(data):
     global curr_gas, curr_dir, commands
-
+    
+    print('curr_gas : ', curr_gas, 'curr_dir : ', curr_dir)
     received_command = data.data
     rospy.loginfo("just received: %s", received_command)
 
