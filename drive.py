@@ -160,12 +160,11 @@ def main():
 
     global controls
 
-    rospy.loginfo("Launching listener")
-
-    rospy.init_node('drive', anonymous=True)
+    rospy.loginfo("Launching listeners")
 
     if controls == 'keyboard':
         print('Using keyboard')
+        rospy.init_node('drive', anonymous=True)
         rospy.Subscriber("dir_gas", String, callback)
         rospy.Subscriber("pic", String, pic_cb)
         print("Ready, entering loop")
