@@ -51,30 +51,30 @@ class Application(Frame):
 
 
     def send_up(self, event=None):
-        print "up"
+        print("up")
         self.kpub.publish("up")
     def send_down(self, event=None):
-        print "down"
+        print("down")
         self.kpub.publish("down")
     def send_right(self, event=None):
-        print "right"
+        print("right")
         self.kpub.publish("right")
     def send_left(self, event=None):
-        print "left"
+        print("left")
         self.kpub.publish("left")
     def left_release(self, event=None):
-        print "left released"
+        print("left released")
         self.kpub.publish("leftreleased")
     def right_release(self, event=None):
-        print "right released"
         self.kpub.publish("rightreleased")
+        print("right released")
     def up_release(self, event=None):
-        print "up released"
-    def down_release(self, event=None):
         self.kpub.publish("upreleased")
-        print "down released"
-    def quit_safe(self, event=None):
+        print("up released")
+    def down_release(self, event=None):
         self.kpub.publish("downreleased")
+        print("down released")
+    def quit_safe(self, event=None):
         print("quitting safely")
         os.system('xset r on')
         self.quit()
