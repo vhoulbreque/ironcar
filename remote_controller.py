@@ -121,9 +121,6 @@ class Application(Frame):
 def callback_autopilot(data):
     global graph, model, commands, com_pub
 
-    drive_t, stop_t, left_t, right_t = commands['go'], commands['stop'],
-                                        commands['left'], commands['drive']
-
     print('received image')
     np_arr = np.fromstring(data.data, np.uint8).reshape(1, 150, 250, 3)
 
@@ -134,20 +131,21 @@ def callback_autopilot(data):
     prediction = prediction[0]
     print('prediction : ', prediction)
 
+    # TODO: only works if discrete...
     # gas
     predicted_gas = prediction[0]
-    if predicted_gas > drive_t:
+    if predicted_gas > commands['go']:
         curr_gas = 'up'
-    elif predicted_gas < stop_t:
+    elif predicted_gas < commands['stop']:
         curr_gas = 'down'
     else:
         curr_gas = 'upreleased'
 
     # dir
     predicted_dir = prediction[1]
-    if predicted_dir > right_t:
+    if predicted_dir > commands['drive']:
         curr_dir = 'right'
-    elif predicted_dir < left_t:
+    elif predicted_dir < commands['left']:
         curr_dir = 'left'
     else:
         curr_dir = 'leftreleased'
