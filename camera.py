@@ -7,7 +7,8 @@ import numpy as np
 
 import roslib
 import rospy
-from sensor_msgs.msg import CompressedImage, String
+from sensor_msgs.msg import CompressedImage
+from std_msgs.msg import String
 
 import picamera
 import picamera.array
@@ -37,7 +38,7 @@ def initialiaze_imu():
 def main():
 
     global mode
-
+    print('mode : ', mode)
     if mode == 'autopilot':
 
         # cam setup
@@ -74,6 +75,7 @@ def main():
             rate = rospy.Rate(10) # 10hz
             while not rospy.is_shutdown():
                 hello_str = "hi"
+                print(hello_str)
                 #rospy.loginfo(hello_str)
                 pub.publish(hello_str)
                 rate.sleep()
@@ -102,3 +104,5 @@ if __name__ == '__main__':
 
     if mode == 'autopilot':
         initialiaze_imu()
+    
+    main()
