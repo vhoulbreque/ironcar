@@ -19,28 +19,20 @@ from Tkinter import *
 from inputs import get_gamepad
 from std_msgs.msg import String, Float32, Bool
 
-import time
-import sys
-import picamera
-import picamera.array
 import numpy as np
-import Adafruit_PCA9685
 import tensorflow as tf
-import numpy as np
-import rospy
 import roslib
 import scipy.misc
 
 from PIL import Image
 from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import String
 from keras.models import load_model
 
 
 # Keyboard controller
 class Application(Frame):
 
-    def __init__(self, master=None):
+    def __init__(self, kpub, master=None):
 
         Frame.__init__(self, master)
         self.pack()
@@ -55,32 +47,34 @@ class Application(Frame):
         self.master.bind("<KeyRelease-Up>", self.up_release)
         self.master.bind("<KeyRelease-Down>", self.down_release)
 
+        self.kpub = kpub
+
 
     def send_up(self, event=None):
         print "up"
-        kpub.publish("up")
+        self.kpub.publish("up")
     def send_down(self, event=None):
         print "down"
-        kpub.publish("down")
+        self.kpub.publish("down")
     def send_right(self, event=None):
         print "right"
-        kpub.publish("right")
+        self.kpub.publish("right")
     def send_left(self, event=None):
         print "left"
-        kpub.publish("left")
+        self.kpub.publish("left")
     def left_release(self, event=None):
         print "left released"
-        kpub.publish("leftreleased")
+        self.kpub.publish("leftreleased")
     def right_release(self, event=None):
         print "right released"
-        kpub.publish("rightreleased")
+        self.kpub.publish("rightreleased")
     def up_release(self, event=None):
         print "up released"
-        kpub.publish("upreleased")
     def down_release(self, event=None):
+        self.kpub.publish("upreleased")
         print "down released"
-        kpub.publish("downreleased")
     def quit_safe(self, event=None):
+        self.kpub.publish("downreleased")
         print("quitting safely")
         os.system('xset r on')
         self.quit()
@@ -168,7 +162,7 @@ def main(controller):
         print('Please control the car with the keyboard arrows')
 
         root = Tk()
-        app = Application(master=root)
+        app = Application(kpub, master=root)
         app.mainloop()
         root.destroy()
 
@@ -214,7 +208,14 @@ def main(controller):
         rospy.spin()
 
 class ArgumentError(Exception):
-    print('Error in arguments !')
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        print('Error in arguments !')
+        return self
+
 
 
 if __name__ == '__main__':
@@ -230,7 +231,11 @@ if __name__ == '__main__':
                     'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                     'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360}
 
+    print(arguments)
+
+
     i = 0
+    print(i < len(arguments))
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
