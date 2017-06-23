@@ -11,7 +11,7 @@ Launched on the Raspberry Pi
 
 import sys
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32, Bool
 import Adafruit_PCA9685
 import time
 import picamera
@@ -46,16 +46,26 @@ def dir_cb(data):
 
 
 def gas_cb(data):
-    global curr_gas, commands
-
+    global curr_gas, commands, reverse
+    print('reverse : ', reverse)
+    print('reverse_drive_max : ', commands['rev_drive_max'])
     curr_gas = data.data
 
-    if commands['reverse']:
+    if reverse:
         if curr_gas < 0:
+            print('0')
+            print(commands['rev_neutral'])
             pwm.set_pwm(commands['gas'], 0 , commands['rev_neutral'])
         elif curr_gas == 0:
+            print('1')
+            print(commands['rev_neutral'])
             pwm.set_pwm(commands['gas'], 0 , commands['rev_neutral'])
         else:
+            print('2')
+            print(curr_gas)
+            print(commands['rev_drive_max'])
+            print(commands['rev_drive'])
+            print(int(curr_gas * (commands['rev_drive_max']-commands['rev_drive']) + commands['rev_drive']))
             pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['rev_drive_max']-commands['rev_drive']) + commands['rev_drive']))
     else:
         if curr_gas < 0:
@@ -67,9 +77,7 @@ def gas_cb(data):
 
 
 def change_dir_cb(data):
-    global commands
-
-    reverse = commands['reverse']
+    global commands, reverse
 
     change_direction = data.data
     if change_direction:
@@ -82,16 +90,15 @@ def change_dir_cb(data):
             pwm.set_pwm(commands['gas'], 0, 390)
             time.sleep(1)
             pwm.set_pwm(commands['gas'], 0, commands['neutral'])
-    commands['reverse'] = reverse
 
 
 def callback(data):
     global curr_gas, curr_dir, commands
-    
+    print('&'*25)
     print('curr_gas : ', curr_gas, 'curr_dir : ', curr_dir)
     received_command = data.data
     rospy.loginfo("just received: %s", received_command)
-
+    print('commands : ', commands)
     if received_command == "left":
         pwm.set_pwm(commands['direction'], 0 , commands['left'])
         curr_dir = -1
@@ -102,8 +109,6 @@ def callback(data):
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])
         curr_dir = 0
     elif received_command == "up":
-        print('commands[gas] : ', commands['gas'])
-        print('commands[drive] : ', commands['drive'])
         pwm.set_pwm(commands['gas'], 0 , commands['drive'])
         curr_gas = 0.5
     elif received_command == "down":
@@ -205,9 +210,9 @@ if __name__ == '__main__':
 
     # TODO
     commands = {'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
-                'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360,
-                'drive_max': 420, 'reverse': False, 'rev_neutral': 380,
-                'rev_drive': 370, 'rev_drive_max': 360, 'rev_stop': 400,
+                'gas': 2, 'drive': 400, 'stop': 210, 'neutral': 385,
+                'drive_max': 420, 'rev_neutral': 380,
+                'rev_drive': 360, 'rev_drive_max': 350, 'rev_stop': 400,
                 'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5}
 
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
@@ -230,6 +235,7 @@ if __name__ == '__main__':
 
     curr_dir = 0
     curr_gas = 0
+    reverse = False
 
     #IMU params
     xacc_threshold = 0.2
