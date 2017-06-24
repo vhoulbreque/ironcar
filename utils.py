@@ -24,7 +24,7 @@ def initialize_imu(loop=5):
     return bno
 
 
-def load_commands(path):
+def load_controls(path):
 
     if not os.path.isfile(path):
         raise IOError
