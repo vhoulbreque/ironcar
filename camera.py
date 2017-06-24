@@ -88,4 +88,4 @@ if __name__ == '__main__':
     if mode == 'autopilot':
         bno = initialize_imu(5)
 
-    main()
+    main(mode)
