@@ -50,7 +50,7 @@ def dir_cb(data):
 
 def gas_cb(data):
     global curr_gas, commands, reverse
-    
+
     print('reverse : ', reverse)
     print('reverse_drive_max : ', commands['rev_drive_max'])
     curr_gas = data.data
@@ -247,7 +247,7 @@ if __name__ == '__main__':
         i += 1
 
     if init_imu:
-        initialize_imu(5)
+        bno = initialize_imu(5)
 
     if init_motor:
         initialize_motor(xacc_threshold)
