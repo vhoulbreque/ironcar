@@ -201,14 +201,11 @@ if __name__ == '__main__':
 
     n_img = 0
 
-    # cam setup
-    print('Setting up the pi camera')
-    cam = picamera.PiCamera()
-    print('Pi camera set up')
-
     # PWM setup
     pwm = Adafruit_PCA9685.PCA9685()
     pwm.set_pwm_freq(60)
+
+    cam = None
 
     # init_motor
     step = 2
@@ -253,5 +250,11 @@ if __name__ == '__main__':
 
     if init_motor:
         initialize_motor(xacc_threshold)
+
+    if controls != 'autopilot':
+        # cam setup
+        print('Setting up the pi camera')
+        cam = picamera.PiCamera()
+        print('Pi camera set up')
 
     main()
