@@ -25,7 +25,7 @@ def main(mode):
 
         # cam setup
         cam = picamera.PiCamera()
-        cam_output = picamera.array.PiRGBArray(cam, size=(150, 250, 3))
+        cam_output = picamera.array.PiRGBArray(cam, size=(150, 250))
 
         # ros publisher setup
         image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
