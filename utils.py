@@ -1,9 +1,10 @@
 import os
 import json
-from Adafruit_BNO055 import BNO055
 
 
 def initialize_imu(loop=5):
+
+    from Adafruit_BNO055 import BNO055
 
     # IMU setup
     bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
