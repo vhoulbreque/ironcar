@@ -39,7 +39,7 @@ def main(mode):
         while not rospy.is_shutdown():
             x, y, z = bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
-            cam.capture(cam_output, 'rgb', resize=(250,150))
+            cam.capture(cam_output, 'rgb', resize=(70, 150))
             img_arr = np.array([cam_output.array])
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
