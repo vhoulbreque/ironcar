@@ -114,34 +114,23 @@ class Application(Frame):
 def callback_autopilot(data):
     global graph, model, controls, com_pub
 
+    img_n, img_height, img_width, img_channel = 1, 70, 250, 3
+
     print('received image')
-    np_arr = np.fromstring(data.data, np.uint8).reshape(1, 150, 250, 3)
+    np_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height,
+                                                        img_width, img_channel)
 
     # tensorflow returns a bug if there is no graph...
     with graph.as_default():
         prediction = model.predict(np_arr)
 
-    prediction = prediction[0]
     print('prediction : ', prediction)
+    prediction = prediction[0]
 
-    # TODO: only works if discrete...
-    # gas
-    predicted_gas = prediction[0]
-    if predicted_gas > controls['go']:
-        curr_gas = 'up'
-    elif predicted_gas < controls['stop']:
-        curr_gas = 'down'
-    else:
-        curr_gas = 'upreleased'
+    index_class = prediction.index(1)
+    curr_dir = -1 + 2 * index_class/len(predictions)
 
-    # dir
-    predicted_dir = prediction[1]
-    if predicted_dir > controls['drive']:
-        curr_dir = 'right'
-    elif predicted_dir < controls['left']:
-        curr_dir = 'left'
-    else:
-        curr_dir = 'leftreleased'
+    curr_gas = 0
 
     com_pub.publish(curr_gas)
     com_pub.publish(curr_dir)
@@ -202,7 +191,8 @@ def main(controller):
         print('Autopilot is ready')
 
         rospy.init_node('autopilot', anonymous=True)
-        com_pub = rospy.Publisher('dir_gas', String, queue_size=20)
+        gas_pub = rospy.Publisher('gas', Float32, queue_size=20)
+        dir_pub = rospy.Publisher('dir', Float32, queue_size=20)
         sub = rospy.Subscriber("/camera", CompressedImage, callback_autopilot, queue_size=1000)
         rospy.spin()
 
@@ -215,10 +205,12 @@ if __name__ == '__main__':
     arguments = sys.argv[1:]
 
     controller = 'keyboard'
-    model_path = 'autopilot_2.hdf5'
     controls = {'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5,
                     'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                     'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360}
+
+    models_folder = 'models'
+    model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
     print(arguments)
 
@@ -237,7 +229,7 @@ if __name__ == '__main__':
         if arg in ['-m', '--model']:
             if i+1 >= len(arguments):
                 raise ArgumentError
-            model_path = arguments[i+1]
+            model_path = os.path.join(models_folder, arguments[i+1])
             if not os.path.isfile(model_path):
                 print('This path does not exist : {}'.format(model_path))
                 raise ArgumentError
