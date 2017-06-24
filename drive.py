@@ -102,7 +102,7 @@ def callback(data):
     print('curr_gas : ', curr_gas, 'curr_dir : ', curr_dir)
     received_command = data.data
     rospy.loginfo("just received: %s", received_command)
-    print('commands : ', commands)
+
     if received_command == "left":
         pwm.set_pwm(commands['direction'], 0 , commands['left'])
         curr_dir = -1
@@ -141,6 +141,7 @@ def initialize_motor(xacc_threshold):
             commands['drive'] = drive
             break
 
+
 def main():
 
     global controls
@@ -167,7 +168,8 @@ def main():
     	print('Running in autopilot !')
         rospy.loginfo("Launching listener")
         rospy.init_node('drive', anonymous=True)
-        rospy.Subscriber("dir_gas", String, callback)
+        rospy.Subscriber("dir", Float32, dir_cb)
+        rospy.Subscriber("gas", Float32, gas_cb)
         print("Ready, entering loop")
         rospy.spin()
 
