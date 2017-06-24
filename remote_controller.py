@@ -251,7 +251,6 @@ if __name__ == '__main__':
                 print('Using default thresholds')
             else:
                 controls = load_controls(controls_file)
-                # TODO
             i += 1
         i += 1
 
