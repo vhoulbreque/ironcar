@@ -124,7 +124,7 @@ def callback(data):
 
 
 def initialize_motor(xacc_threshold):
-    global step, commands, bno
+    global step, commands, bno, init_gas
 
     x = 0
     for k in range(0, 50, step):
