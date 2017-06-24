@@ -25,7 +25,7 @@ def main(mode):
 
         # cam setup
         cam = picamera.PiCamera()
-        cam_output = picamera.array.PiRGBArray(cam, size=(70, 250, 3))
+        cam_output = picamera.array.PiRGBArray(cam, size=(150, 250, 3))
 
         # ros publisher setup
         image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
@@ -39,7 +39,7 @@ def main(mode):
         while not rospy.is_shutdown():
             x, y, z = bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
-            cam.capture(cam_output, 'rgb', resize=(70, 250, 3))
+            cam.capture(cam_output, 'rgb', resize=(150, 250))
             img_arr = np.array([cam_output.array])
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
