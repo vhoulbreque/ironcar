@@ -18,6 +18,7 @@ import picamera
 import datetime
 import os
 from Adafruit_BNO055 import BNO055
+from utils import ArgumentError, initialize_imu
 
 # PWM setup
 pwm = Adafruit_PCA9685.PCA9685()
@@ -49,6 +50,7 @@ def dir_cb(data):
 
 def gas_cb(data):
     global curr_gas, commands, reverse
+    
     print('reverse : ', reverse)
     print('reverse_drive_max : ', commands['rev_drive_max'])
     curr_gas = data.data
@@ -120,27 +122,6 @@ def callback(data):
         pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
         curr_gas = 0
 
-# IMU setup
-def initialize_imu(xacc_threshold):
-    global bno
-
-    bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
-
-    # Sometimes, the IMU does not initialize correctly the first time
-    n_loop = 5
-    for i in range(0, n_loop):
-        try:
-            if not bno.begin():
-                raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
-            else:
-                print("Initialized IMU correctly")
-                break
-        except:
-            if i == 4 :
-                print("Failed initializing IMU {} times, aborting. Please check the IMU connection".format(n_loop))
-            else:
-                print("Failed initializing IMU, trying again")
-
 
 def initialize_motor(xacc_threshold):
     global step, commands, bno
@@ -159,10 +140,6 @@ def initialize_motor(xacc_threshold):
             drive = 360 + k + init_gas
             commands['drive'] = drive
             break
-
-class ArgumentError(Exception):
-   print('Error in arguments !')
-
 
 def main():
 
@@ -270,7 +247,7 @@ if __name__ == '__main__':
         i += 1
 
     if init_imu:
-        initialize_imu(xacc_threshold)
+        initialize_imu(5)
 
     if init_motor:
         initialize_motor(xacc_threshold)

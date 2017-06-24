@@ -14,36 +14,18 @@ import picamera
 import picamera.array
 
 from Adafruit_BNO055 import BNO055
+from utils import ArgumentError, initialize_imu
 
 
-def initialiaze_imu():
+def main(mode):
 
-    global bno
+    print('Loading {} mode'.format(mode))
 
-    # IMU setup
-    bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
-    for i in range(0, 5):
-        try:
-            if not bno.begin():
-                raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
-            else:
-                print("Initialized IMU correctly")
-                break
-        except:
-            if i == 4 :
-                print("Failed initializing IMU 5 times, aborting. Please check the IMU connection")
-            else:
-                print("Failed initializing IMU, trying again")
-
-def main():
-
-    global mode
-    print('mode : ', mode)
     if mode == 'autopilot':
 
         # cam setup
         cam = picamera.PiCamera()
-        cam_output = picamera.array.PiRGBArray(cam, size=(250,150))
+        cam_output = picamera.array.PiRGBArray(cam, size=(250, 150))
 
         # ros publisher setup
         image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
@@ -60,7 +42,6 @@ def main():
             cam.capture(cam_output, 'rgb', resize=(250,150))
             img_arr = np.array([cam_output.array])
             msg.header.stamp = rospy.Time.now()
-            print(img_arr.shape)
             msg.data = img_arr.tostring()
             msg.header.frame_id = acc
             image_pub.publish(msg)
@@ -75,12 +56,13 @@ def main():
             rate = rospy.Rate(10) # 10hz
             while not rospy.is_shutdown():
                 hello_str = "hi"
-                print(hello_str)
-                #rospy.loginfo(hello_str)
                 pub.publish(hello_str)
                 rate.sleep()
 
         pic_talker()
+
+    else:
+        print('This mode ({}) does not exist'.format(mode))
 
 
 if __name__ == '__main__':
@@ -90,6 +72,7 @@ if __name__ == '__main__':
 
     mode = 'training'
     bno = None
+    xacc_threshold = 0.2
 
     i = 0
     while i < len(arguments):
@@ -103,6 +86,6 @@ if __name__ == '__main__':
         i += 1
 
     if mode == 'autopilot':
-        initialiaze_imu()
-    
+        bno = initialize_imu(5)
+
     main()

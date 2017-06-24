@@ -14,19 +14,18 @@ import os
 import time
 import sys
 import rospy
-
-from Tkinter import *
-from inputs import get_gamepad
-from std_msgs.msg import String, Float32, Bool
-
 import numpy as np
 import tensorflow as tf
 import roslib
 import scipy.misc
 
+from Tkinter import *
+from inputs import get_gamepad
+from std_msgs.msg import String, Float32, Bool
 from PIL import Image
 from sensor_msgs.msg import CompressedImage
 from keras.models import load_model
+from utils import ArgumentError, load_controls
 
 
 # Keyboard controller
@@ -76,7 +75,7 @@ class Application(Frame):
         print("down released")
     def quit_safe(self, event=None):
         print("quitting safely")
-        os.system('xset r on')
+        os.system('xset r on')  # to enable 'key continously pressed' back
         self.quit()
 
     def createWidgets(self):
@@ -113,7 +112,7 @@ class Application(Frame):
 
 
 def callback_autopilot(data):
-    global graph, model, commands, com_pub
+    global graph, model, controls, com_pub
 
     print('received image')
     np_arr = np.fromstring(data.data, np.uint8).reshape(1, 150, 250, 3)
@@ -128,18 +127,18 @@ def callback_autopilot(data):
     # TODO: only works if discrete...
     # gas
     predicted_gas = prediction[0]
-    if predicted_gas > commands['go']:
+    if predicted_gas > controls['go']:
         curr_gas = 'up'
-    elif predicted_gas < commands['stop']:
+    elif predicted_gas < controls['stop']:
         curr_gas = 'down'
     else:
         curr_gas = 'upreleased'
 
     # dir
     predicted_dir = prediction[1]
-    if predicted_dir > commands['drive']:
+    if predicted_dir > controls['drive']:
         curr_dir = 'right'
-    elif predicted_dir < commands['left']:
+    elif predicted_dir < controls['left']:
         curr_dir = 'left'
     else:
         curr_dir = 'leftreleased'
@@ -207,27 +206,17 @@ def main(controller):
         sub = rospy.Subscriber("/camera", CompressedImage, callback_autopilot, queue_size=1000)
         rospy.spin()
 
-class ArgumentError(Exception):
-
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        print('Error in arguments !')
-        return self
-
-
 
 if __name__ == '__main__':
 
     possible_arguments = ['-k', '--keyboard', '-g', '--gamepad',
                           '-a', '--autopilot', '-m', '--model',
-                          '-c', '--commands_folder']
+                          '-c', '--controls_folder']
     arguments = sys.argv[1:]
 
     controller = 'keyboard'
     model_path = 'autopilot_2.hdf5'
-    commands = {'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5,
+    controls = {'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5,
                     'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                     'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360}
 
@@ -235,7 +224,6 @@ if __name__ == '__main__':
 
 
     i = 0
-    print(i < len(arguments))
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
@@ -254,15 +242,15 @@ if __name__ == '__main__':
                 print('This path does not exist : {}'.format(model_path))
                 raise ArgumentError
             i += 1
-        if arg in ['-c', '--commands-folder']:
+        if arg in ['-c', '--controls-file']:
             if i+1 >= len(arguments):
                 raise ArgumentError
-            command_file = arguments[i+1]
-            if not os.isfile(command_file):
-                print('No command_file found at : ', command_file)
+            controls_file = arguments[i+1]
+            if not os.isfile(controls_file):
+                print('No controls_file found at : ', controls_file)
                 print('Using default thresholds')
             else:
-                commands = load_commands(command_file)
+                controls = load_controls(controls_file)
                 # TODO
             i += 1
         i += 1
