@@ -112,33 +112,35 @@ class Application(Frame):
 
 
 def callback_autopilot(data):
-    global graph, model, controls, com_pub
+    global graph, model, controls, gas_pub, dir_pub
 
-    img_n, img_height, img_width, img_channel = 1, 70, 250, 3
+    img_n, img_height, img_width, img_channel = 1, 150, 250, 3
 
-    print('received image')
-    np_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height,
-                                                        img_width, img_channel)
+    np_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
+    np_arr = np_arr[:, 80:, :, :]  # resize of the image happens after !
+
+    acc_arr = np.array([np.array(list(map(float, data.header.frame_id.split('_')[:-1])))])
 
     # tensorflow returns a bug if there is no graph...
     with graph.as_default():
-        prediction = model.predict(np_arr)
+        prediction = model.predict([np_arr, acc_arr])
 
-    print('prediction : ', prediction)
     prediction = prediction[0]
 
-    index_class = prediction.index(1)
-    curr_dir = -1 + 2 * index_class/len(predictions)
+    index_class = list(prediction).index(1)
+    curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
 
     curr_gas = 0
 
-    com_pub.publish(curr_gas)
-    com_pub.publish(curr_dir)
+    gas_pub.publish(curr_gas)
+    dir_pub.publish(curr_dir)
 
     print('current direction: ', curr_dir, ' current gas: ', curr_gas)
 
 
 def main(controller):
+
+    global gas_pub, dir_pub
 
     if controller == 'keyboard':
 
@@ -199,9 +201,12 @@ def main(controller):
 
 if __name__ == '__main__':
 
-    possible_arguments = ['-k', '--keyboard', '-g', '--gamepad',
-                          '-a', '--autopilot', '-m', '--model',
-                          '-c', '--controls_folder']
+    possible_arguments = ['-k', '--keyboard',
+                          '-g', '--gamepad',
+                          '-a', '--autopilot',
+                          '-m', '--model',
+                          '-c', '--controls_folder',
+                          '-v', '--verbose']
     arguments = sys.argv[1:]
 
     controller = 'keyboard'
