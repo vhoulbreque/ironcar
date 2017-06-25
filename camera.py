@@ -34,7 +34,7 @@ def main(mode):
         msg = CompressedImage()
         msg.format = "jpeg"
 
-        rate = rospy.Rate(10) # 10 Hz
+        rate = rospy.Rate(100) # 10 Hz
 
         while not rospy.is_shutdown():
             x, y, z = bno.read_linear_acceleration()
