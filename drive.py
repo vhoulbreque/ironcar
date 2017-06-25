@@ -20,10 +20,6 @@ import os
 from Adafruit_BNO055 import BNO055
 from utils import ArgumentError, initialize_imu
 
-# PWM setup
-pwm = Adafruit_PCA9685.PCA9685()
-pwm.set_pwm_freq(60)
-
 def pic_cb(data):
 
     global n_img, curr_gas, curr_dir, drive, bno, save_folder
@@ -38,38 +34,31 @@ def pic_cb(data):
 
 def dir_cb(data):
 
-    global curr_dir, commands
+    global curr_dir, commands, pwm
 
     curr_dir = data.data
-
+    print('direction received : ', curr_dir)
+    print('com_dir : ', commands['direction'])
+    print('pwm : ', pwm)
     if curr_dir == 0:
+        print(commands['straight'])
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])
     else:
+        print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
         pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
 
 def gas_cb(data):
     global curr_gas, commands, reverse
 
-    print('reverse : ', reverse)
-    print('reverse_drive_max : ', commands['rev_drive_max'])
     curr_gas = data.data
-
+    #print('gas received : ', curr_gas)
     if reverse:
         if curr_gas < 0:
-            print('0')
-            print(commands['rev_neutral'])
             pwm.set_pwm(commands['gas'], 0 , commands['rev_neutral'])
         elif curr_gas == 0:
-            print('1')
-            print(commands['rev_neutral'])
             pwm.set_pwm(commands['gas'], 0 , commands['rev_neutral'])
         else:
-            print('2')
-            print(curr_gas)
-            print(commands['rev_drive_max'])
-            print(commands['rev_drive'])
-            print(int(curr_gas * (commands['rev_drive_max']-commands['rev_drive']) + commands['rev_drive']))
             pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['rev_drive_max']-commands['rev_drive']) + commands['rev_drive']))
     else:
         if curr_gas < 0:
