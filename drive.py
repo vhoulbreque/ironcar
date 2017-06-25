@@ -37,9 +37,6 @@ def dir_cb(data):
     global curr_dir, commands, pwm
 
     curr_dir = data.data
-    print('direction received : ', curr_dir)
-    print('com_dir : ', commands['direction'])
-    print('pwm : ', pwm)
     if curr_dir == 0:
         print(commands['straight'])
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])
@@ -52,7 +49,6 @@ def gas_cb(data):
     global curr_gas, commands, reverse
 
     curr_gas = data.data
-    #print('gas received : ', curr_gas)
     if reverse:
         if curr_gas < 0:
             pwm.set_pwm(commands['gas'], 0 , commands['rev_neutral'])
@@ -87,8 +83,7 @@ def change_dir_cb(data):
 
 def callback(data):
     global curr_gas, curr_dir, commands
-    print('&'*25)
-    print('curr_gas : ', curr_gas, 'curr_dir : ', curr_dir)
+
     received_command = data.data
     rospy.loginfo("just received: %s", received_command)
 
@@ -115,21 +110,22 @@ def callback(data):
 def initialize_motor(xacc_threshold):
     global step, commands, bno, init_gas
 
+    if bno is None: return
+
     x = 0
     for k in range(0, 50, step):
-        print(x)
-        pwm.set_pwm(2, 0 , 360 + k)
-        # TODO: what if there is not imu ?
+        gas = 360 + k
+        pwm.set_pwm(2, 0 , gas)
         x, y, z = bno.read_linear_acceleration()
         time.sleep(0.3)
+        print('acceleration (x_acc) detected : {} with an gas set at : {}'.format(x, gas))
         if x > xacc_threshold:
-            print("detected movement, setting straight to ", 360+k)
             pwm.set_pwm(2, 0 , commands['neutral'])
-            time.sleep(2)
             drive = 360 + k + init_gas
             commands['drive'] = drive
+            print('detected movement, setting `drive` to ', drive)
+            time.sleep(2)
             break
-
 
 def main():
 
