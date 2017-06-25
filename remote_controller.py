@@ -75,7 +75,7 @@ class Application(Frame):
         print("down released")
     def quit_safe(self, event=None):
         print("quitting safely")
-        os.system('xset r on')  # to enable 'key continously pressed' back
+        os.system('xset r on')  # to enable 'key continuously pressed' back
         self.quit()
 
     def createWidgets(self):
@@ -127,7 +127,10 @@ def callback_autopilot(data):
 
     prediction = prediction[0]
 
-    index_class = list(prediction).index(1)
+    print('prediction : ', prediction)
+
+    prediction = list(prediction)
+    index_class = prediction.index(max(prediction))
     curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
 
     curr_gas = 0
@@ -252,7 +255,9 @@ if __name__ == '__main__':
         i += 1
 
     if controller == 'autopilot':
+        print('Loading model at path : ', model_path)
         model = load_model(model_path)
         graph = tf.get_default_graph()
+        print('Finishing loading model at path : ', model_path)
 
     main(controller)
