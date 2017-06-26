@@ -118,7 +118,7 @@ def initialize_motor(xacc_threshold):
         pwm.set_pwm(2, 0 , gas)
         x, y, z = bno.read_linear_acceleration()
         time.sleep(0.3)
-        print('acceleration (x_acc) detected : {} with an gas set at : {}'.format(x, gas))
+        print('acceleration (x_acc) detected : {} with a gas set at : {}'.format(x, gas))
         if x > xacc_threshold:
             pwm.set_pwm(2, 0 , commands['neutral'])
             drive = 360 + k + init_gas
@@ -225,8 +225,6 @@ if __name__ == '__main__':
                 print('Using the default one : ', save_folder)
             else:
                 save_folder = arguments[i+1]
-            if not os.path.exists(save_folder):
-                os.makedirs(save_folder)
             i += 1
         i += 1
 
@@ -241,5 +239,8 @@ if __name__ == '__main__':
         print('Setting up the pi camera')
         cam = picamera.PiCamera()
         print('Pi camera set up')
+
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
 
     main()
