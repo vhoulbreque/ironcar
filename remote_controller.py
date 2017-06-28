@@ -148,7 +148,7 @@ def callback_log(data):
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
     save_arr = np.array(im_arr[0,:,:,:], copy=True)
     im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
-    print('np_arr.shape : ', np_arr.shape)
+    print('im_arr.shape : ', im_arr.shape)
 
     acc_arr = np.array([np.array(list(map(float, data.header.frame_id.split('_')[:-1])))])
 
