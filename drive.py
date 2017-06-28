@@ -113,15 +113,16 @@ def initialize_motor(xacc_threshold):
     if bno is None: return
 
     x = 0
+    neutral = commands['neutral']
     for k in range(0, 50, step):
-        gas = 360 + k
+        gas = neutral + k
         pwm.set_pwm(2, 0 , gas)
         x, y, z = bno.read_linear_acceleration()
         time.sleep(0.3)
         print('acceleration (x_acc) detected : {} with a gas set at : {}'.format(x, gas))
         if x > xacc_threshold:
             pwm.set_pwm(2, 0 , commands['neutral'])
-            drive = 360 + k + init_gas
+            drive = neutral + k + init_gas
             commands['drive'] = drive
             print('detected movement, setting `drive` to ', drive)
             time.sleep(2)
@@ -165,16 +166,20 @@ def main():
 
 if __name__ == '__main__':
 
-    possible_arguments = ['-k', '--keyboard', '-a', '--autopilot', '-g',
-                          '--gamepad', '-i', '--init-motor', '-s',
-                          '--save-folder', '--no-imu']
+    possible_arguments = ['-k', '--keyboard',
+                          '-a', '--autopilot',
+                          '-g', '--gamepad',
+                          '-s', '--save-folder',
+                          '--no-imu',
+                          '--no-init-motor',
+                          '--no-init']
+
     arguments = sys.argv[1:]
 
     controls = 'keyboard'
-    init_motor = False
+    init_motor = True
     init_imu = True
 
-    # TODO
     commands = {'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
                 'gas': 2, 'drive': 400, 'stop': 210, 'neutral': 385,
                 'drive_max': 420, 'rev_neutral': 370,
@@ -194,7 +199,7 @@ if __name__ == '__main__':
 
     # init_motor
     step = 2
-    init_gas = 10
+    init_gas = 0
 
     curr_dir = 0
     curr_gas = 0
@@ -217,8 +222,11 @@ if __name__ == '__main__':
             controls = 'gamepad'
         elif arg in ['-a', '--autopilot']:
             controls = 'autopilot'
-        elif arg in ['-i', '--init-motor']:
-            init_motor = True
+        elif arg in ['--no-init-motor']:
+            init_motor = False
+        elif arg in ['--no-init']:
+            init_motor = False
+            init_imu = False
         elif arg in ['-s', '--save-file']:
             if i+1 >= len(arguments):
                 print('No save file has been given.')
@@ -234,8 +242,8 @@ if __name__ == '__main__':
     if init_motor:
         initialize_motor(xacc_threshold)
 
+    # cam setup
     if controls != 'autopilot':
-        # cam setup
         print('Setting up the pi camera')
         cam = picamera.PiCamera()
         print('Pi camera set up')
