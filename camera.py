@@ -12,6 +12,7 @@ from std_msgs.msg import String
 
 import picamera
 import picamera.array
+import scipy.misc
 
 from Adafruit_BNO055 import BNO055
 from utils import ArgumentError, initialize_imu
@@ -25,7 +26,7 @@ def main(mode):
 
         # cam setup
         cam = picamera.PiCamera()
-        cam_output = picamera.array.PiRGBArray(cam, size=(150, 250))
+        cam_output = picamera.array.PiRGBArray(cam, size=(250, 150))
 
         # ros publisher setup
         image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
@@ -39,7 +40,7 @@ def main(mode):
         while not rospy.is_shutdown():
             x, y, z = bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
-            cam.capture(cam_output, 'rgb', resize=(150, 250))
+            cam.capture(cam_output, 'rgb', resize=(250, 150))
             img_arr = np.array([cam_output.array])
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
