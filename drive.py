@@ -194,7 +194,7 @@ if __name__ == '__main__':
 
     # init_motor
     step = 2
-    init_gas = 10
+    init_gas = 0
 
     curr_dir = 0
     curr_gas = 0
