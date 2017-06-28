@@ -145,21 +145,16 @@ def callback_log(data):
     global graph, model, controls, gas_pub, dir_pub, save_folder_laptop, n_img
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
-    # TODO Test failed, but is the resize of the camera to be changed
-    # img_n, img_height, img_width, img_channel = 1, 160, 256, 3
-    # print(data.data)
-    np_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
-    save_ar = np.array(np_arr[0,:,:,:], copy=True)
+    im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
+    save_arr = np.array(im_arr[0,:,:,:], copy=True)
+    im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
     print('np_arr.shape : ', np_arr.shape)
-    np_arr = np_arr[:, 80:, :, :]  # resize of the image happens after !
-    print('np_arr.shape : ', np_arr.shape)
-    #np_arr = np_arr[:, :, 80:, :]
 
     acc_arr = np.array([np.array(list(map(float, data.header.frame_id.split('_')[:-1])))])
 
     # tensorflow returns a bug if there is no graph...
     with graph.as_default():
-        prediction = model.predict([np_arr, acc_arr])
+        prediction = model.predict([im_arr, acc_arr])
 
     prediction = prediction[0]
 
@@ -174,9 +169,7 @@ def callback_log(data):
     image_name = os.path.join(save_folder_laptop, 'frame_'+ str(n_img) +
                                 '_gas_' + str(curr_gas) + '_dir_' +
                                 str(curr_dir) + '.jpg')
-    #save_ar = np_arr[0,:,:,:]
-    scipy.misc.imsave(image_name, save_ar)
-    print(save_ar.shape)
+    scipy.misc.imsave(image_name, save_arr)
     n_img += 1
     print('image saved at path : {}'.format(image_name))
 
