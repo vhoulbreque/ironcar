@@ -25,9 +25,10 @@ def main(mode):
     if mode == 'autopilot':
 
         # cam setup
-        cam = picamera.PiCamera()
+        cam = picamera.PiCamera(framerate=60)
+        cam.resolution = (250, 150)
         cam_output = picamera.array.PiRGBArray(cam, size=(250, 150))
-
+        stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
         # ros publisher setup
         image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
         rospy.init_node('image_pub', anonymous=True)
@@ -35,19 +36,22 @@ def main(mode):
         msg = CompressedImage()
         msg.format = "jpeg"
 
-        rate = rospy.Rate(100) # 10 Hz
-
-        while not rospy.is_shutdown():
+        #rate = rospy.Rate(100) # 10 Hz
+        #while not rospy.is_shutdown():        
+        for f in stream:
+            print("sent pic")
             x, y, z = bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
-            cam.capture(cam_output, 'rgb', resize=(250, 150))
-            img_arr = np.array([cam_output.array])
+            
+            #cam.capture(cam_output, 'rgb', resize=(250, 150))
+            #img_arr = np.array([cam_output.array])
+            img_arr = f.array
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
             msg.header.frame_id = acc
             image_pub.publish(msg)
             cam_output.truncate(0)
-            rate.sleep()
+            
 
     elif mode == 'training':
 
