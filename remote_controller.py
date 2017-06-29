@@ -114,70 +114,82 @@ class Application(Frame):
 
 def callback_autopilot(data):
     global graph, model, controls, gas_pub, dir_pub
+    global previous_frame, previous_accel, is_acc_in_input, n_images_input
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
-
-    np_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
-    np_arr = np_arr[:, 80:, :, :]  # resize of the image happens after !
-
+    im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
+    im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
     acc_arr = np.array([np.array(list(map(float, data.header.frame_id.split('_')[:-1])))])
 
-    # tensorflow returns a bug if there is no graph...
-    with graph.as_default():
-        prediction = model.predict([np_arr, acc_arr])
+    # TODO: more general
+    if n_images_input == 2 and is_acc_in_input:
+        input_model = [previous_frame, previous_accel, im_arr, acc_arr]
+    elif n_images_input != 2 and is_acc_in_input:
+        input_model = [im_arr, acc_arr]
+    elif n_images_input == 2 and not is_acc_in_input:
+        input_model = [previous_frame, im_arr]
+    elif n_images_input != 2 and not is_acc_in_input:
+        input_model = [im_arr]
+    else:
+        raise Exception
 
-    prediction = prediction[0]
+    if not (n_images_input == 2 and previous_frame is None):
 
-    print('prediction : ', prediction)
+        # tensorflow returns a bug if there is no graph...
+        with graph.as_default():
+            prediction = list(model.predict(input_model)[0])
 
-    prediction = list(prediction)
-    index_class = prediction.index(max(prediction))
-    curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
+        if verbose: print('prediction : ', prediction)
 
-    curr_gas = 0
+        index_class = prediction.index(max(prediction))
+        curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
+        curr_gas = 0
+    else:
+        curr_dir = 0
+        curr_gas = 0
+
+    if n_images_input == 2:
+        previous_accel = acc_arr
+        previous_frame = im_arr
 
     gas_pub.publish(curr_gas)
     dir_pub.publish(curr_dir)
 
-    print('current direction: ', curr_dir, ' current gas: ', curr_gas)
+    if verbose:
+        print('current direction: ', curr_dir, ' current gas: ', curr_gas)
 
 
 def callback_log(data):
-    global graph, model, controls, gas_pub, dir_pub, save_folder_laptop, n_img
+    global gas_pub, dir_pub
+    global controls, save
+    global graph, model, controls
+    global n_img, previous_accel, verbose
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
-    save_arr = np.array(im_arr[0,:,:,:], copy=True)
     im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
-    print('im_arr.shape : ', im_arr.shape)
-
     acc_arr = np.array([np.array(list(map(float, data.header.frame_id.split('_')[:-1])))])
 
-    # tensorflow returns a bug if there is no graph...
-    with graph.as_default():
-        prediction = model.predict([im_arr, acc_arr])
+    if verbose: print('im_arr.shape : ', im_arr.shape)
 
-    prediction = prediction[0]
-
-    print('prediction : ', prediction)
-
-    prediction = list(prediction)
-    index_class = prediction.index(max(prediction))
-    curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-    curr_gas = 0
-
-    # TODO: Include xacc, yacc and zacc too
+    xacc, yacc, zacc = previous_accel[0], previous_accel[1], previous_accel[2]
     image_name = os.path.join(log_path, 'frame_'+ str(n_img) +
-                                '_gas_' + str(curr_gas) + '_dir_' +
-                                str(curr_dir) + '.jpg')
+                                '_gas_' + str(curr_gas) +
+                                '_dir_' + str(curr_dir) +
+                                '_xacc_' + str(xacc) +
+                                '_yacc_' + str(yacc) +
+                                '_zacc_' + str(zacc) +
+                                '.jpg')
+    save_arr = np.array(im_arr[0,:,:,:], copy=True)
     scipy.misc.imsave(image_name, save_arr)
     n_img += 1
-    print('image saved at path : {}'.format(image_name))
+
+    if verbose: print('image saved at path : {}'.format(image_name))
 
 
 def main(controller):
 
-    global gas_pub, dir_pub
+    global gas_pub, dir_pub, verbose
 
     if controller == 'keyboard':
 
@@ -186,7 +198,7 @@ def main(controller):
         kpub = rospy.Publisher('dir_gas', String, queue_size=20)
         rospy.init_node('keyboard_pub', anonymous=True)
 
-        print('Please control the car with the keyboard arrows')
+        if verbose: print('Please control the car with the keyboard arrows')
 
         root = Tk()
         app = Application(kpub, master=root)
@@ -200,7 +212,7 @@ def main(controller):
         gp_rev_pub = rospy.Publisher('rev', Bool, queue_size=3)
         rospy.init_node('gp_pub', anonymous=True)
 
-        print('Please control the car with the gamepad')
+        if verbose: print('Please control the car with the gamepad')
 
         quit = False
         while not quit:
@@ -220,14 +232,14 @@ def main(controller):
                     else:
                         gp_gas_pub.publish(0)
                 if event.code == 'BTN_MODE' and event.state == 1 :
-                    print('Quitting, bye!')
+                    if verbose: print('Quitting, bye!')
                     quit = True
                 if event.code == 'BTN_WEST' and event.state == 1:
-                    print('Switching direction')
+                    if verbose: print('Switching direction')
                     gp_rev_pub.publish(True)
 
     elif controller == 'autopilot':
-        print('Autopilot is ready')
+        if verbose: print('Autopilot is ready')
 
         rospy.init_node('autopilot', anonymous=True)
         gas_pub = rospy.Publisher('gas', Float32, queue_size=20)
@@ -245,7 +257,8 @@ if __name__ == '__main__':
                           '-m', '--model',
                           '-c', '--controls_folder',
                           '-l', '--log-folder',
-                          '-v', '--verbose']
+                          '-v', '--verbose',
+                          '--n-acc']
     arguments = sys.argv[1:]
 
     controller = 'keyboard'
@@ -257,11 +270,18 @@ if __name__ == '__main__':
     model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
     log_folder = 'log_info'
-    log_path = os.join(log_folder, log_path)
+    log_path = os.path.join(log_folder, 'default')
 
     print(arguments)
 
     n_img = 0
+    previous_frame = None
+    previous_accel = None
+
+    n_images_input = 1
+    is_acc_in_input = 1
+
+    verbose = False
 
     i = 0
     while i < len(arguments):
@@ -297,16 +317,23 @@ if __name__ == '__main__':
                 raise ArgumentError
             log_path = os.path.join(log_folder, arguments[i+1])
             i += 1
+        elif arg in ['-v', '--verbose']:
+            verbose = True
+        elif arg in ['--n-acc']:
+            if i+2 >= len(arguments):
+                raise ArgumentError
+            n_input_images = int(arguments[i+1])
+            is_acc_in_input = True if int(arguments[i+2]) else False
         i += 1
 
     if not os.path.exists(log_path):
         os.makedirs(log_path)
-    print('The log path chosen is : {}'.format(log_path))
+    if verbose: print('The log path chosen is : {}'.format(log_path))
 
     if controller == 'autopilot':
-        print('Loading model at path : ', model_path)
+        if verbose: print('Loading model at path : ', model_path)
         model = load_model(model_path)
         graph = tf.get_default_graph()
-        print('Finishing loading model at path : ', model_path)
+        if verbose: print('Finishing loading model at path : ', model_path)
 
     main(controller)
