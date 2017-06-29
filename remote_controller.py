@@ -167,7 +167,7 @@ def callback_log(data):
     curr_gas = 0
 
     # TODO: Include xacc, yacc and zacc too
-    image_name = os.path.join(save_folder_laptop, 'frame_'+ str(n_img) +
+    image_name = os.path.join(log_path, 'frame_'+ str(n_img) +
                                 '_gas_' + str(curr_gas) + '_dir_' +
                                 str(curr_dir) + '.jpg')
     scipy.misc.imsave(image_name, save_arr)
@@ -244,6 +244,7 @@ if __name__ == '__main__':
                           '-a', '--autopilot',
                           '-m', '--model',
                           '-c', '--controls_folder',
+                          '-l', '--log-folder',
                           '-v', '--verbose']
     arguments = sys.argv[1:]
 
@@ -255,27 +256,25 @@ if __name__ == '__main__':
     models_folder = 'models'
     model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
-    save_folder_laptop = 'log_info'
-    if not os.path.exists(save_folder_laptop):
-        os.makedirs(save_folder_laptop)
+    log_folder = 'log_info'
+    log_path = os.join(log_folder, log_path)
 
     print(arguments)
 
     n_img = 0
-
 
     i = 0
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
             raise ArgumentError
-        if arg in ['-k', '--keyboard']:
+        elif arg in ['-k', '--keyboard']:
             controller = 'keyboard'
-        if arg in ['-g', '--gamepad']:
+        elif arg in ['-g', '--gamepad']:
             controller = 'gamepad'
-        if arg in ['-a', '--autopilot']:
+        elif arg in ['-a', '--autopilot']:
             controller = 'autopilot'
-        if arg in ['-m', '--model']:
+        elif arg in ['-m', '--model']:
             if i+1 >= len(arguments):
                 raise ArgumentError
             model_path = os.path.join(models_folder, arguments[i+1])
@@ -283,7 +282,7 @@ if __name__ == '__main__':
                 print('This path does not exist : {}'.format(model_path))
                 raise ArgumentError
             i += 1
-        if arg in ['-c', '--controls-file']:
+        elif arg in ['-c', '--controls-file']:
             if i+1 >= len(arguments):
                 raise ArgumentError
             controls_file = arguments[i+1]
@@ -293,7 +292,16 @@ if __name__ == '__main__':
             else:
                 controls = load_controls(controls_file)
             i += 1
+        elif arg in ['-l', '--log-folder']:
+            if i+1 >= len(arguments):
+                raise ArgumentError
+            log_path = os.path.join(log_folder, arguments[i+1])
+            i += 1
         i += 1
+
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    print('The log path chosen is : {}'.format(log_path))
 
     if controller == 'autopilot':
         print('Loading model at path : ', model_path)
