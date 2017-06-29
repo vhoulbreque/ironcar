@@ -22,9 +22,10 @@ import scipy.misc
 from Tkinter import *
 from inputs import get_gamepad
 from std_msgs.msg import String, Float32, Bool
-from PIL import Image
 from sensor_msgs.msg import CompressedImage
+from PIL import Image
 from keras.models import load_model
+
 from utils import ArgumentError, load_controls
 
 
