@@ -11,10 +11,13 @@ Launched on the Raspberry Pi
 
 import sys
 import rospy
+import numpy as np
+import scipy.misc
 from std_msgs.msg import String, Float32, Bool
 import Adafruit_PCA9685
 import time
 import picamera
+import picamera.array
 import datetime
 import os
 from Adafruit_BNO055 import BNO055
@@ -22,14 +25,19 @@ from utils import ArgumentError, initialize_imu
 
 def pic_cb(data):
 
-    global n_img, curr_gas, curr_dir, drive, bno, save_folder
+    global n_img, curr_gas, curr_dir, drive, bno, save_folder, cam, cam_output, stream
 
     x, y, z = bno.read_linear_acceleration()
     image_name = os.path.join(save_folder, 'frame_'+ str(n_img) + '_gas_' +
                                 str(curr_gas) + '_dir_' + str(curr_dir) +
                                 "_xacc_" + str(x) + "_yacc_" + str(y) +
                                 "_zacc_" + str(z) +'_' + '.jpg')
-    cam.capture(image_name, quality=10, resize=(250,150))
+    for f in stream:
+        im_arr = f.array
+        break
+    cam_output.truncate(0)
+    im_arr = np.array(im_arr[80:, :, :], copy=True)
+    scipy.misc.imsave(image_name, im_arr)
     n_img += 1
 
 def dir_cb(data):
@@ -196,6 +204,7 @@ if __name__ == '__main__':
     pwm.set_pwm_freq(60)
 
     cam = None
+    cam_output = None
 
     # init_motor
     step = 2
@@ -245,7 +254,10 @@ if __name__ == '__main__':
     # cam setup
     if controls != 'autopilot':
         print('Setting up the pi camera')
-        cam = picamera.PiCamera()
+        cam = picamera.PiCamera(framerate=60)
+        cam.resolution = (250, 150)
+        cam_output = picamera.array.PiRGBArray(cam, size=(250, 150))
+        stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
         print('Pi camera set up')
 
     if not os.path.exists(save_folder):
