@@ -81,7 +81,7 @@ def change_dir_cb(data):
             pwm.set_pwm(commands['gas'], 0, commands['neutral'])
 
 
-def callback(data):
+def keyboard_cb(data):
     global curr_gas, curr_dir, commands
 
     received_command = data.data
@@ -137,7 +137,7 @@ def main():
     if controls == 'keyboard':
         print('Using keyboard')
         rospy.init_node('drive', anonymous=True)
-        rospy.Subscriber("dir_gas", String, callback)
+        rospy.Subscriber("dir_gas", String, keyboard_cb)
         rospy.Subscriber("pic", String, pic_cb)
         print("Ready, entering loop")
         rospy.spin()
