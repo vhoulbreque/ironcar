@@ -36,15 +36,10 @@ def main(mode):
         msg = CompressedImage()
         msg.format = "jpeg"
 
-        #rate = rospy.Rate(100) # 10 Hz
-        #while not rospy.is_shutdown():        
         for f in stream:
-            print("sent pic")
             x, y, z = bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
             
-            #cam.capture(cam_output, 'rgb', resize=(250, 150))
-            #img_arr = np.array([cam_output.array])
             img_arr = f.array
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
