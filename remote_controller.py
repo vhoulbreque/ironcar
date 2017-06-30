@@ -115,6 +115,7 @@ class Application(Frame):
 def callback_autopilot(data):
     global graph, model, controls, gas_pub, dir_pub
     global previous_frame, previous_accel, is_acc_in_input, n_images_input
+    global curr_gas, curr_dir
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
@@ -164,6 +165,7 @@ def callback_log(data):
     global controls, save
     global graph, model, controls
     global n_img, previous_accel, verbose
+    global curr_dir, curr_gas
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
@@ -172,19 +174,21 @@ def callback_log(data):
 
     if verbose: print('im_arr.shape : ', im_arr.shape)
 
-    xacc, yacc, zacc = previous_accel[0], previous_accel[1], previous_accel[2]
-    image_name = os.path.join(log_path, 'frame_'+ str(n_img) +
+    if previous_accel is not None:
+        accel = previous_accel[0]
+        xacc, yacc, zacc = accel[0], accel[1], accel[2]
+        image_name = os.path.join(log_path, 'frame_'+ str(n_img) +
                                 '_gas_' + str(curr_gas) +
                                 '_dir_' + str(curr_dir) +
                                 '_xacc_' + str(xacc) +
                                 '_yacc_' + str(yacc) +
                                 '_zacc_' + str(zacc) +
                                 '.jpg')
-    save_arr = np.array(im_arr[0,:,:,:], copy=True)
-    scipy.misc.imsave(image_name, save_arr)
-    n_img += 1
+        save_arr = np.array(im_arr[0,:,:,:], copy=True)
+        scipy.misc.imsave(image_name, save_arr)
+        n_img += 1
 
-    if verbose: print('image saved at path : {}'.format(image_name))
+        if verbose: print('image saved at path : {}'.format(image_name))
 
 
 def main(controller):
@@ -278,8 +282,11 @@ if __name__ == '__main__':
     previous_frame = None
     previous_accel = None
 
-    n_images_input = 1
-    is_acc_in_input = 1
+    n_images_input = 2
+    is_acc_in_input = True
+
+    curr_dir = 0
+    curr_gas = 0
 
     verbose = False
 
@@ -322,18 +329,22 @@ if __name__ == '__main__':
         elif arg in ['--n-acc']:
             if i+2 >= len(arguments):
                 raise ArgumentError
-            n_input_images = int(arguments[i+1])
+            print('here')
+            n_images_input = int(arguments[i+1])
             is_acc_in_input = True if int(arguments[i+2]) else False
+            i += 2
         i += 1
-
-    if not os.path.exists(log_path):
-        os.makedirs(log_path)
-    if verbose: print('The log path chosen is : {}'.format(log_path))
 
     if controller == 'autopilot':
         if verbose: print('Loading model at path : ', model_path)
         model = load_model(model_path)
         graph = tf.get_default_graph()
         if verbose: print('Finishing loading model at path : ', model_path)
+
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+        else:
+            if verbose: print('The path you just chose already exists')
+        if verbose: print('The log path chosen is : {}'.format(log_path))
 
     main(controller)
