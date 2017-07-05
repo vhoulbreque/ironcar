@@ -116,6 +116,7 @@ def callback_autopilot(data):
     global graph, model, controls, gas_pub, dir_pub
     global previous_frame, previous_accel, is_acc_in_input, n_images_input
     global curr_gas, curr_dir
+    global is_gas_auto
 
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
@@ -152,8 +153,9 @@ def callback_autopilot(data):
     if n_images_input == 2:
         previous_accel = acc_arr
         previous_frame = im_arr
-
-    gas_pub.publish(curr_gas)
+    
+    if is_gas_auto:
+        gas_pub.publish(curr_gas)
     dir_pub.publish(curr_dir)
 
     if verbose:
@@ -166,7 +168,7 @@ def callback_log(data):
     global graph, model, controls
     global n_img, previous_accel, verbose
     global curr_dir, curr_gas
-
+    
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
     im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
@@ -187,7 +189,7 @@ def callback_log(data):
         save_arr = np.array(im_arr[0,:,:,:], copy=True)
         scipy.misc.imsave(image_name, save_arr)
         n_img += 1
-
+	print("n_img: ", n_img)
         if verbose: print('image saved at path : {}'.format(image_name))
 
 
@@ -258,6 +260,7 @@ if __name__ == '__main__':
     possible_arguments = ['-k', '--keyboard',
                           '-g', '--gamepad',
                           '-a', '--autopilot',
+                          '-ad', '--autopilot-dir',
                           '-m', '--model',
                           '-c', '--controls_folder',
                           '-l', '--log-folder',
@@ -282,7 +285,7 @@ if __name__ == '__main__':
     previous_frame = None
     previous_accel = None
 
-    n_images_input = 2
+    n_images_input = 1
     is_acc_in_input = True
 
     curr_dir = 0
@@ -301,6 +304,10 @@ if __name__ == '__main__':
             controller = 'gamepad'
         elif arg in ['-a', '--autopilot']:
             controller = 'autopilot'
+            is_gas_auto = True 
+        elif arg in ['-ad', '--autopilot-dir']:
+            controller = 'autopilot'
+            is_gas_auto = False        
         elif arg in ['-m', '--model']:
             if i+1 >= len(arguments):
                 raise ArgumentError
