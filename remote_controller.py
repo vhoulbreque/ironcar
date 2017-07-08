@@ -329,7 +329,6 @@ if __name__ == '__main__':
         elif arg in ['--n-acc']:
             if i+2 >= len(arguments):
                 raise ArgumentError
-            print('here')
             n_images_input = int(arguments[i+1])
             is_acc_in_input = True if int(arguments[i+2]) else False
             i += 2
@@ -344,7 +343,7 @@ if __name__ == '__main__':
         if not os.path.exists(log_path):
             os.makedirs(log_path)
         else:
-            if verbose: print('The path you just chose already exists')
+            if verbose: print('The log path you just chose already exists')
         if verbose: print('The log path chosen is : {}'.format(log_path))
 
     main(controller)
