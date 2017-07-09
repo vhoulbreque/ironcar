@@ -26,7 +26,7 @@ from sensor_msgs.msg import CompressedImage
 from PIL import Image
 from keras.models import load_model
 
-from utils import ArgumentError, load_controls
+from utils import ArgumentError, FolderExistsError, load_controls
 
 
 # Keyboard controller
@@ -153,7 +153,7 @@ def callback_autopilot(data):
     if n_images_input == 2:
         previous_accel = acc_arr
         previous_frame = im_arr
-    
+
     if is_gas_auto:
         gas_pub.publish(curr_gas)
     dir_pub.publish(curr_dir)
@@ -168,7 +168,7 @@ def callback_log(data):
     global graph, model, controls
     global n_img, previous_accel, verbose
     global curr_dir, curr_gas
-    
+
     img_n, img_height, img_width, img_channel = 1, 150, 250, 3
     im_arr = np.fromstring(data.data, np.uint8).reshape(img_n, img_height, img_width, img_channel)
     im_arr = im_arr[:, 80:, :, :]  # resize of the image happens after !
@@ -268,18 +268,17 @@ if __name__ == '__main__':
                           '--n-acc']
     arguments = sys.argv[1:]
 
+    print(arguments)
+
     controller = 'keyboard'
-    controls = {'go_t': 0.25, 'stop_t': -0.25, 'left_t': 0.5, 'right_t': -0.5,
-                    'direction': 1, 'left': 310, 'right': 490, 'straight': 400,
-                    'gas': 2, 'drive': 400, 'stop': 200, 'neutral': 360}
+    controls = None
+    controls_file = None
 
     models_folder = 'models'
     model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
-    log_folder = 'log_info'
-    log_path = os.path.join(log_folder, 'default')
-
-    print(arguments)
+    ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    log_folder = ps.path.join('log_info', str(ct))
 
     n_img = 0
     previous_frame = None
@@ -297,42 +296,36 @@ if __name__ == '__main__':
     while i < len(arguments):
         arg = arguments[i]
         if arg not in possible_arguments:
-            raise ArgumentError
+            raise ArgumentError('The argument `{}` is not recognized'.format(arg))
         elif arg in ['-k', '--keyboard']:
             controller = 'keyboard'
         elif arg in ['-g', '--gamepad']:
             controller = 'gamepad'
         elif arg in ['-a', '--autopilot']:
             controller = 'autopilot'
-            is_gas_auto = True 
+            is_gas_auto = True
         elif arg in ['-ad', '--autopilot-dir']:
             controller = 'autopilot'
-            is_gas_auto = False        
+            is_gas_auto = False
+        elif arg in ['-v', '--verbose']:
+            verbose = True
         elif arg in ['-m', '--model']:
             if i+1 >= len(arguments):
-                raise ArgumentError
+                raise ArgumentError('No model has been given')
             model_path = os.path.join(models_folder, arguments[i+1])
             if not os.path.isfile(model_path):
-                print('This path does not exist : {}'.format(model_path))
-                raise ArgumentError
+                raise FileNotFoundError('There is no model at path {}'.format(model_path))
             i += 1
         elif arg in ['-c', '--controls-file']:
             if i+1 >= len(arguments):
                 raise ArgumentError
-            controls_file = arguments[i+1]
-            if not os.isfile(controls_file):
-                print('No controls_file found at : ', controls_file)
-                print('Using default thresholds')
-            else:
-                controls = load_controls(controls_file)
+            controls_file = os.path.join('configs', arguments[i+1])
             i += 1
         elif arg in ['-l', '--log-folder']:
             if i+1 >= len(arguments):
                 raise ArgumentError
             log_path = os.path.join(log_folder, arguments[i+1])
             i += 1
-        elif arg in ['-v', '--verbose']:
-            verbose = True
         elif arg in ['--n-acc']:
             if i+2 >= len(arguments):
                 raise ArgumentError
@@ -341,16 +334,33 @@ if __name__ == '__main__':
             i += 2
         i += 1
 
+    # Loading the controls
+    if controls_file is None:
+        print('You did not give a configuration file.\nUsing default configuration file instead')
+        controls_file = os.path.join('configs', 'default_controls.json')
+    if os.path.exists(controls_file):
+        try:
+            controls = load_controls(controls_file)
+        except Exception as e:
+            print('An error occurred while loading controls from file `{}`'.format(controls_file))
+    else:
+        raise FileNotFoundError('The controls file {} has not been found'.format(controls_file))
+    if verbose:
+        print('The controls you chose : ', controls)
+
+
+    # Loading the model and creating log path
     if controller == 'autopilot':
-        if verbose: print('Loading model at path : ', model_path)
+        if verbose:
+            print('Loading model at path {}'.fornat(model_path))
         model = load_model(model_path)
         graph = tf.get_default_graph()
-        if verbose: print('Finishing loading model at path : ', model_path)
+        if verbose:
+            print('Finishing loading model at path : {}'.fornat(model_path))
 
         if not os.path.exists(log_path):
             os.makedirs(log_path)
         else:
-            if verbose: print('The log path you just chose already exists')
-        if verbose: print('The log path chosen is : {}'.format(log_path))
+            raise FolderExistsError('`{}` already exists'.format(log_path))
 
     main(controller)
