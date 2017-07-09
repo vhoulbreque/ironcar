@@ -273,12 +273,13 @@ if __name__ == '__main__':
     controller = 'keyboard'
     controls = None
     controls_file = None
+    is_gas_auto = True
 
     models_folder = 'models'
     model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    log_folder = ps.path.join('log_info', str(ct))
+    log_folder = os.path.join('log_info', str(ct))
 
     n_img = 0
     previous_frame = None
@@ -303,7 +304,6 @@ if __name__ == '__main__':
             controller = 'gamepad'
         elif arg in ['-a', '--autopilot']:
             controller = 'autopilot'
-            is_gas_auto = True
         elif arg in ['-ad', '--autopilot-dir']:
             controller = 'autopilot'
             is_gas_auto = False
@@ -318,17 +318,17 @@ if __name__ == '__main__':
             i += 1
         elif arg in ['-c', '--controls-file']:
             if i+1 >= len(arguments):
-                raise ArgumentError
+                raise ArgumentError('No control file has been given')
             controls_file = os.path.join('configs', arguments[i+1])
             i += 1
         elif arg in ['-l', '--log-folder']:
             if i+1 >= len(arguments):
-                raise ArgumentError
-            log_path = os.path.join(log_folder, arguments[i+1])
+                raise ArgumentError('No log folder has been given')
+            log_path = os.path.join('log_info', arguments[i+1])
             i += 1
         elif arg in ['--n-acc']:
             if i+2 >= len(arguments):
-                raise ArgumentError
+                raise ArgumentError('No number of images/acceleration has been given')
             n_images_input = int(arguments[i+1])
             is_acc_in_input = True if int(arguments[i+2]) else False
             i += 2
@@ -340,7 +340,7 @@ if __name__ == '__main__':
         controls_file = os.path.join('configs', 'default_controls.json')
     if os.path.exists(controls_file):
         try:
-            controls = load_controls(controls_file)
+            controls = load_controls(controls_file)['controls']
         except Exception as e:
             print('An error occurred while loading controls from file `{}`'.format(controls_file))
     else:
