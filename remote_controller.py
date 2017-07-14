@@ -113,6 +113,20 @@ class Application(Frame):
         self.left.pack({"side": "left"})
 
 
+def get_gas_from_dir(direction):
+    # direction: float in [-1, 1]
+
+    gas = 0
+    abs_dir = abs(direction)
+    if abs_dir < 0.25:
+        gas = 0.5
+    elif 0.25 <= abs_dir < 0.7:
+        gas = 0.25
+    else:
+        gas = 0.15
+    return gas
+
+
 def callback_autopilot(data):
     global graph, model, controls, gas_pub, dir_pub
     global previous_frame, previous_accel, is_acc_in_input, n_images_input
@@ -148,7 +162,7 @@ def callback_autopilot(data):
 
         index_class = prediction.index(max(prediction))
         curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-        curr_gas = 0
+        curr_gas = get_gas_from_dir(curr_dir)
     else:
         curr_dir = 0
         curr_gas = 0
