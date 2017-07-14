@@ -17,6 +17,7 @@ import rospy
 import numpy as np
 import tensorflow as tf
 import roslib
+import datetime
 import scipy.misc
 
 from Tkinter import *
@@ -139,9 +140,11 @@ def callback_autopilot(data):
 
         # tensorflow returns a bug if there is no graph...
         with graph.as_default():
-            prediction = list(model.predict(input_model)[0])
+            pred = model.predict(input_model)
+            print('pred : ', pred)
+            prediction = list(pred[0])
 
-        if verbose: print('prediction : ', prediction)
+        # if verbose: print('prediction : ', prediction)
 
         index_class = prediction.index(max(prediction))
         curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
@@ -150,8 +153,8 @@ def callback_autopilot(data):
         curr_dir = 0
         curr_gas = 0
 
+    previous_accel = acc_arr
     if n_images_input == 2:
-        previous_accel = acc_arr
         previous_frame = im_arr
 
     if is_gas_auto:
@@ -189,7 +192,7 @@ def callback_log(data):
         save_arr = np.array(im_arr[0,:,:,:], copy=True)
         scipy.misc.imsave(image_name, save_arr)
         n_img += 1
-	print("n_img: ", n_img)
+        print("n_img: ", n_img)
         if verbose: print('image saved at path : {}'.format(image_name))
 
 
@@ -279,7 +282,8 @@ if __name__ == '__main__':
     model_path = os.path.join(models_folder, 'autopilot_2.hdf5')
 
     ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    log_folder = os.path.join('log_info', str(ct))
+    log_folder = 'log_info'
+    log_path = os.path.join(log_folder, str(ct))
 
     n_img = 0
     previous_frame = None
@@ -324,7 +328,7 @@ if __name__ == '__main__':
         elif arg in ['-l', '--log-folder']:
             if i+1 >= len(arguments):
                 raise ArgumentError('No log folder has been given')
-            log_path = os.path.join('log_info', arguments[i+1])
+            log_path = os.path.join(log_folder, arguments[i+1])
             i += 1
         elif arg in ['--n-acc']:
             if i+2 >= len(arguments):
@@ -352,15 +356,17 @@ if __name__ == '__main__':
     # Loading the model and creating log path
     if controller == 'autopilot':
         if verbose:
-            print('Loading model at path {}'.fornat(model_path))
+            print('Loading model at path {}'.format(model_path))
         model = load_model(model_path)
         graph = tf.get_default_graph()
         if verbose:
-            print('Finishing loading model at path : {}'.fornat(model_path))
+            print('Finishing loading model at path : {}'.format(model_path))
 
         if not os.path.exists(log_path):
             os.makedirs(log_path)
         else:
             raise FolderExistsError('`{}` already exists'.format(log_path))
+
+    print('log_path : ', log_path)
 
     main(controller)
