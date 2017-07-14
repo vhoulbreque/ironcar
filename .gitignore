@@ -10,3 +10,4 @@ images_simulator/
 
 models_explanation.txt
 *.jpg
+*.pyc
