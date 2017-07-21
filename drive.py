@@ -46,16 +46,17 @@ def dir_cb(data):
 
     curr_dir = data.data
     if curr_dir == 0:
-        print(commands['straight'])
+        #print(commands['straight'])
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])
     else:
-        print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+        #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
         pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
-
+    
+    #print('curr_dir : ', curr_dir)
 
 def gas_cb(data):
     global curr_gas, commands, reverse
-
+    slow = 8
     curr_gas = data.data
     if reverse:
         if curr_gas < 0:
@@ -70,7 +71,8 @@ def gas_cb(data):
         elif curr_gas == 0:
             pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
         else:
-            pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+            print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
+            pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']) - slow)
 
 
 def change_dir_cb(data):
@@ -208,7 +210,7 @@ if __name__ == '__main__':
 
     # init_motor
     step = 2
-    init_gas = 0
+    init_gas = 5
 
     curr_dir = 0
     curr_gas = 0

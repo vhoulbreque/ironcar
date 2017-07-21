@@ -25,28 +25,32 @@ def main(mode):
     if mode == 'autopilot':
 
         # cam setup
-        cam = picamera.PiCamera(framerate=60)
+        fps = 60
+        cam = picamera.PiCamera(framerate=fps)
         cam.resolution = (250, 150)
         cam_output = picamera.array.PiRGBArray(cam, size=(250, 150))
         stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
         # ros publisher setup
-        image_pub = rospy.Publisher("/camera", CompressedImage, queue_size=130000)
+        image_pub = rospy.Publisher("/camera", CompressedImage,  queue_size=2)
         rospy.init_node('image_pub', anonymous=True)
 
-        msg = CompressedImage()
-        msg.format = "jpeg"
-
+        # ind = 0 
         for f in stream:
-            x, y, z = bno.read_linear_acceleration()
+            x, y, z = 0,0,0  #bno.read_linear_acceleration()
             acc = str(x) + "_" + str(y) + "_" + str(z) + "_"
             
             img_arr = f.array
+
+            msg = CompressedImage()
+            msg.format = "jpeg"
+
             msg.header.stamp = rospy.Time.now()
             msg.data = img_arr.tostring()
             msg.header.frame_id = acc
             image_pub.publish(msg)
             cam_output.truncate(0)
-            
+            # print(ind)
+            # ind += 1 
 
     elif mode == 'training':
 
