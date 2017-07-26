@@ -37,9 +37,9 @@ io.on('connection', function(client){
         io.emit('starter', states[started]);
     });
 
-    client.on('commands', function(){
+    client.on('client_commands', function(){
         console.log('received: ' + data);
-        io.emit('commands', states[started]);
+        io.emit('commands', data);
     });
 
   	client.on('disconnect', function(){
