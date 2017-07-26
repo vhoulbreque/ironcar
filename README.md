@@ -2,8 +2,8 @@
 ## Summary
 The IronCar project is made for those who need an easy setup for an autonomous vehicle like an RC car using a raspberrypy. 
 We created two branches: 
-* a ROS based project on the master branch. We originally started with ROS as it is an easy framework to setup robotics system that require asynchronous commands.
-* a nodejs based project on the ironcar_node branch. We implemented this to make it easier for people to install and run everything. It is mode straightforward to setup and run on a raspberry pi for example.
+* a ROS based project on the master branch. We originally started with ROS as it is an easy framework to setup such robotic systems that require asynchronous commands.
+* a nodejs based project on the ironcar_node branch. We implemented this to make it easier for people to install and run everything. It is more straightforward to setup and run on a raspberry pi for example.
 
 ## Setup
 
