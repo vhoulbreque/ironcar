@@ -37,6 +37,11 @@ io.on('connection', function(client){
         io.emit('starter', states[started]);
     });
 
+    client.on('commands', function(){
+        console.log('received: ' + data);
+        io.emit('commands', states[started]);
+    });
+
   	client.on('disconnect', function(){
     	console.log('disconnected');
   	});
@@ -52,9 +57,4 @@ server.listen(8000, function(){
   	console.log('listening on 8000');
 });
 
-
-exports.switch_mode = function(){
-    io.emit('switching mode');
-    console.log('sent mode switching');
-};
 
