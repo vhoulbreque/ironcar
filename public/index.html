@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <title>IronCar</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body style="background-image:url(background.jpg); background-size: 90% ">
+    <h1>IronCar</h1>
+    <p id="modeSwitched">Current mode: auto</p>
+    <button onclick="modeSwitched()">Switch mode</button>
+    <button id ="starter" onclick="starter()">Start</button>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect();
+        var modes = ["auto", "training"];
+        var current_mode = 0;
+        function modeSwitched(){
+            current_mode = 1 - current_mode;
+            socket.emit('mode_switching');
+            document.getElementById("modeSwitched").innerHTML = 'Current mode: ' + modes[current_mode];
+        }
+        var started = 1;
+        var states = ["Stop", "Start"];
+        function starter(){
+            started = 1 - started;
+            socket.emit('starter');
+            document.getElementById("starter").innerHTML = states[started];
+        }
+    </script>
+</body>
+</html>
