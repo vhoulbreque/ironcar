@@ -7,18 +7,27 @@
 </head>
 <body style="background-image:url(background.jpg); background-size: 90% ">
     <h1>IronCar</h1>
-    <p id="modeSwitched">Current mode: auto</p>
-    <button onclick="modeSwitched()">Switch mode</button>
+    <p id="Status">Please select a mode darling</p>
+    <form>
+        <input type="radio" name="mode" value="training" onclick="modeSwitched(0)"> Training<br>
+        <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(1)"> Autopilot<br>
+        <input type="radio" name="mode" value="direction auto" onclick="modeSwitched(2)"> Direction auto
+    </form>
+    <form>
+        <select name="autopilot_models" id="model_select" onchange="model_selected(this);">
+            <option name="empty option">                   </option>
+        </select>
+    </form>
     <button id ="starter" onclick="starter()">Start</button>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
-        var modes = ["auto", "training"];
-        var current_mode = 0;
-        function modeSwitched(){
-            current_mode = 1 - current_mode;
-            socket.emit('mode_switching');
-            document.getElementById("modeSwitched").innerHTML = 'Current mode: ' + modes[current_mode];
+        var modes = ["training", "auto", "dirauto"];
+
+        function modeSwitched(i){
+            console.log(modes[i]);
+            socket.emit("modeSwitched", modes[i]);
+            document.getElementById("Status").innerHTML = 'Current mode: ' + modes[i];
         }
         var started = 1;
         var states = ["Stop", "Start"];
@@ -27,6 +36,18 @@
             socket.emit('starter');
             document.getElementById("starter").innerHTML = states[started];
         }
+
+        socket.on('new_available_model', function(data){
+            var x = document.getElementById("model_select");
+            var option = document.createElement("option");
+            option.text = data;
+            option.onclick = "model_selected()";
+            x.add(option);
+        });
+        function model_selected(model_select){
+            socket.emit('model_update', model_select.selectedIndex - 1);
+        }
+
     </script>
 </body>
 </html>

@@ -3,11 +3,8 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
-var modes = ["dir_auto", "training", "auto"];
-var mode = 0;
-
-var started = 1;
-var states = ["start", "stop"];
+started = 0;
+autopilot_models = [];
 
 app.use(express.static(__dirname + '/public'));
 
@@ -19,31 +16,55 @@ app.get('/', function(req, res){
 
 io.on('connection', function(client){
     console.log('connected');
+
+    //charge available models found
+    for (var i = 0; i < autopilot_models.length; i++) {
+        client.emit('new_available_model', autopilot_models[i]);
+    }
+
   	client.on('msg', function(data){
     	console.log(data);
   	});
 
-    client.on('mode_switching', function() {
-        mode = 1 - mode;
-        //send a message to ALL connected clients
-        console.log('switching mode');
-        io.emit('mode_update', modes[mode]);
+    // Mode selection
+    client.on('modeSwitched', function(data) {
+        console.log('selected mode: ' + data);
+        io.emit('mode_update', data);
     });
 
+    // Starter button
     client.on('starter', function() {
+        if(started){
+            console.log('Started');
+            io.emit('starter', "start");
+        }else{
+            console.log("Stopped");
+            io.emit('starter', "stop");
+        }
         started = 1 - started;
-        //send a message to ALL connected clients
-        console.log('switching mode');
-        io.emit('starter', states[started]);
     });
 
+    // Commands transfer
     client.on('dir', function(data){
-        //console.log('received: ' + data);
         io.emit('dir', data);
     });
     client.on('gas', function(data){
-        //console.log('received: ' + data);
         io.emit('gas', data);
+    });
+
+
+    // Autopilot model choice
+    client.on('available_model', function(data){
+        console.log('available model:' + data);
+        if (autopilot_models.indexOf(data) == -1) {
+            console.log(autopilot_models.indexOf(data));
+            autopilot_models.push(data);
+            io.emit('new_available_model', data);
+        }
+
+    });
+    client.on('model_update', function(data){
+        io.emit('model_update', data);
     });
 
 
@@ -55,8 +76,6 @@ io.on('connection', function(client){
 io.on('error', function(data){
 	console.log(data)
 });
-
-
 
 server.listen(8000, function(){
   	console.log('listening on 8000');
