@@ -3,7 +3,7 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
-var modes = ["auto", "training"];
+var modes = ["dir_auto", "training", "auto"];
 var mode = 0;
 
 var started = 1;
@@ -37,12 +37,17 @@ io.on('connection', function(client){
         io.emit('starter', states[started]);
     });
 
-    client.on('client_commands', function(data){
-        console.log('received: ' + data);
-        io.emit('commands', data);
+    client.on('dir', function(data){
+        //console.log('received: ' + data);
+        io.emit('dir', data);
+    });
+    client.on('gas', function(data){
+        //console.log('received: ' + data);
+        io.emit('gas', data);
     });
 
-  	client.on('disconnect', function(){
+
+    client.on('disconnect', function(){
     	console.log('disconnected');
   	});
 });
