@@ -30,10 +30,6 @@ commands_json_file = "commands.json"
 # ***********************************************************************************
 
 # --------------------------- SETUP ------------------------
-print('Loading model at path : ', model_path)
-model = load_model(model_path)
-graph = tf.get_default_graph()
-print('Finished loading model')
 
 with open(commands_json_file) as json_file:
     commands = json.load(json_file)
@@ -43,8 +39,8 @@ pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(60)
 
 global state, mode, running
-state,  running = "stop", True
-
+state, mode, running = "stop","training",  True
+model_loaded = False
 
 # ---------------- Different modes functions ----------------
 def default_call(img):
@@ -52,6 +48,7 @@ def default_call(img):
 
 
 def autopilot(img):
+    global model, graph
     cache = time.time()
     img = np.array([img[80:, :, :]])
     with graph.as_default():
@@ -66,7 +63,9 @@ def autopilot(img):
 
 
 def training(img):
+    global curr_dir, curr_gas
     
+    img_name = "frame" + "_gas_" + str(curr_gas) + "_dir_" + str(curr_dir)
     pass
 
 
@@ -86,7 +85,6 @@ def camera_loop():
         img_arr = f.array
         if not running: break
         if state == "start":
-            print("started run")
             mode_function(img_arr)
 
         #print("state, mode are: ", state)
@@ -96,8 +94,16 @@ def camera_loop():
 
 # ------------------ SocketIO callbacks-----------------------
 def on_switch_mode(data):
-    global mode_function
-    if data == "auto":
+    global mode, mode_function, model_loaded, model, graph
+    mode = data
+    if data == "dir_auto":
+        if not model_loaded:
+            model_loaded = True
+            print('Loading model at path : ', model_path)
+            model = load_model(model_path)
+            graph = tf.get_default_graph()
+            print('Finished loading model')
+
         mode_function = autopilot
     elif data == "training":
         mode_function = training
@@ -112,10 +118,34 @@ def on_start(data):
     print('starter set to  ' + data)
 
 
-def on_commands(data):
+def on_dir(data):
+    global mode, curr_dir
+    if mode == "training":
+#        msg_in = data.split("_")
+        curr_dir = float(data)   
+#        curr_gas = float(msg_in[1])
+#        curr_dir = float(msg_in[3])
+        if curr_dir == 0:
+            #print(commands['straight'])
+            pwm.set_pwm(commands['direction'], 0 , commands['straight'])
+        else:
+            #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+            pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
-    print('commands received: ' + data)
 
+def on_gas(data):
+    global mode, curr_gas
+    if mode == "training" or mode == "dir_auto":
+
+        curr_gas = float(data)
+        if curr_gas < 0:
+            pwm.set_pwm(commands['gas'], 0 , commands['stop'])
+        elif curr_gas == 0:
+            pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+        else:
+            #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
+            pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+    
 
 # --------------- Starting server and threads ----------------
 mode_function = default_call
@@ -125,7 +155,8 @@ camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
 socketIO.on('mode_update', on_switch_mode)
 socketIO.on('starter', on_start)
-socketIO.on('client_commands', on_start)
+socketIO.on('gas', on_gas)
+socketIO.on('dir', on_dir)
 
 try:
     socketIO.wait()
