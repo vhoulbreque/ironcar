@@ -45,9 +45,11 @@ pwm.set_pwm_freq(60)
 global state, mode, running
 state,  running = "stop", True
 
+
 # ---------------- Different modes functions ----------------
 def default_call(img):
     pass
+
 
 def autopilot(img):
     cache = time.time()
@@ -62,9 +64,11 @@ def autopilot(img):
     #print("curr_gas ", curr_gas)
     pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
+
 def training(img):
     
     pass
+
 
 # ------------------- Main camera loop  ---------------------
 # This function is launched on a separate thread that is supposed to run permanently
@@ -89,6 +93,7 @@ def camera_loop():
         #time.sleep(0.3)
         cam_output.truncate(0)
 
+
 # ------------------ SocketIO callbacks-----------------------
 def on_switch_mode(data):
     global mode_function
@@ -105,7 +110,12 @@ def on_start(data):
     global state
     state = data
     print('starter set to  ' + data)
-# ------------------------------------------------------------
+
+
+def on_commands(data):
+
+    print('commands received: ' + data)
+
 
 # --------------- Starting server and threads ----------------
 mode_function = default_call
@@ -115,6 +125,7 @@ camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
 socketIO.on('mode_update', on_switch_mode)
 socketIO.on('starter', on_start)
+socketIO.on('client_commands', on_start)
 
 try:
     socketIO.wait()
