@@ -2,9 +2,10 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
+var fs = require('fs');
 
-started = 0;
-autopilot_models = [];
+const testFolder = './autopilots/';
+
 
 app.use(express.static(__dirname + '/public'));
 
@@ -13,14 +14,24 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/public/index.html');
 });
 
+started = 0;
+autopilot_models = [];
+function find_models(folder){
+    fs.readdirSync(folder).forEach(function(file){
+        console.log(file);
+        if (autopilot_models.indexOf(file) == -1) {
+            autopilot_models.push(file);
+            console.log('new_available_model' + file);
+            io.emit('new_available_model', file);
+        }
+    });
+}
 
 io.on('connection', function(client){
     console.log('connected');
 
     //charge available models found
-    for (var i = 0; i < autopilot_models.length; i++) {
-        client.emit('new_available_model', autopilot_models[i]);
-    }
+    find_models(testFolder);
 
   	client.on('msg', function(data){
     	console.log(data);
@@ -54,17 +65,13 @@ io.on('connection', function(client){
 
 
     // Autopilot model choice
-    client.on('available_model', function(data){
-        console.log('available model:' + data);
-        if (autopilot_models.indexOf(data) == -1) {
-            console.log(autopilot_models.indexOf(data));
-            autopilot_models.push(data);
-            io.emit('new_available_model', data);
-        }
-
+    client.on('refresh_models', function() {
+        find_models(testFolder);
     });
+
     client.on('model_update', function(data){
-        io.emit('model_update', data);
+        console.log('model_update', autopilot_models[data]);
+        io.emit('model_update', autopilot_models[data]);
     });
 
 

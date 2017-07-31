@@ -19,7 +19,7 @@ import numpy as np
 import json
 
 # *********************************** Parameters ************************************
-model_path = 'autopilots/autopilot_500k.hdf5'
+models_path = './autopilots/'
 
 fps = 60
 
@@ -93,17 +93,20 @@ def camera_loop():
 
 
 # ------------------ SocketIO callbacks-----------------------
+def on_model_selected(model_name):
+    global models_path, model, graph
+    new_model_path = models_path + model_name + ".hdf5"
+    print('Loading model at path : ', new_model_path)
+    model = load_model(new_model_path)
+    graph = tf.get_default_graph()
+    print('Finished loading model')
+    pass
+
+
 def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
     mode = data
     if data == "dir_auto":
-        if not model_loaded:
-            model_loaded = True
-            print('Loading model at path : ', model_path)
-            model = load_model(model_path)
-            graph = tf.get_default_graph()
-            print('Finished loading model')
-
         mode_function = autopilot
     elif data == "training":
         mode_function = training
@@ -154,6 +157,7 @@ socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
 camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
 socketIO.on('mode_update', on_switch_mode)
+socketIO.on('model_update', on_model_selected)
 socketIO.on('starter', on_start)
 socketIO.on('gas', on_gas)
 socketIO.on('dir', on_dir)

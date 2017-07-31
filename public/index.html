@@ -18,6 +18,7 @@
             <option name="empty option">                   </option>
         </select>
     </form>
+    <button id ="refresh_models" onclick="refresh_models()">Refresh autopilots models</button>
     <button id ="starter" onclick="starter()">Start</button>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -35,6 +36,10 @@
             started = 1 - started;
             socket.emit('starter');
             document.getElementById("starter").innerHTML = states[started];
+        }
+
+        function refresh_models(){
+            socket.emit('refresh_models', '1');
         }
 
         socket.on('new_available_model', function(data){
