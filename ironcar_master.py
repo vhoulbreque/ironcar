@@ -38,9 +38,9 @@ with open(commands_json_file) as json_file:
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(60)
 
-global state, mode, running
-state, mode, running = "stop","training",  True
+state, mode, running = "stop", "training",  True
 model_loaded = False
+
 
 # ---------------- Different modes functions ----------------
 def default_call(img):
@@ -49,7 +49,7 @@ def default_call(img):
 
 def autopilot(img):
     global model, graph
-    cache = time.time()
+
     img = np.array([img[80:, :, :]])
     with graph.as_default():
         pred = model.predict(img)
@@ -107,6 +107,8 @@ def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
     mode = data
     if data == "dir_auto":
+        mode_function = dirauto
+    elif data == "auto":
         mode_function = autopilot
     elif data == "training":
         mode_function = training

@@ -51,7 +51,6 @@
                     }
                 }
             }
-            console.log("cleaned myselect", mySelect.options[0]);
             if (selectedModel === -1){
                 var option = document.createElement("option");
                 option.text = "";
@@ -60,7 +59,6 @@
             }else{
                 selectedModel = mySelect.options[mySelect.selectedIndex].text;
             }
-            console.log("selected model ", selectedModel, mySelect.options[mySelect.selectedIndex]);
             for (i = 0; i < modelList.length; i++) {
                 if (modelList[i] !== selectedModel){
                     option = document.createElement("option");
