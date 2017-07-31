@@ -26,7 +26,7 @@
         function modeSwitched(i){
             console.log(modes[i]);
             socket.emit("modeSwitched", modes[i]);
-            document.getElementById("Status").innerHTML = 'Current mode: ' + modes[i];
+            document.getElementById("Status").innerHTML = 'Current mode: ' + modes[i] + " ";
         }
         var started = 1;
         var states = ["Stop", "Start"];
@@ -75,6 +75,11 @@
             var modelName = mySelect.options[mySelect.selectedIndex].text;
             socket.emit('model_update', modelName);
         }
+
+        // Message to the user
+        socket.on('msg2user', function(message){
+            document.getElementById("Status").innerHTML.split("-")[0] += '-' + message;
+        });
 
     </script>
 </body>

@@ -26,10 +26,13 @@ fps = 60
 cam_resolution = (250, 150)
 
 commands_json_file = "commands.json"
-#model_input_size = ()
+
 # ***********************************************************************************
 
 # --------------------------- SETUP ------------------------
+
+ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+save_folder = os.path.join('datasets/', str(ct))
 
 with open(commands_json_file) as json_file:
     commands = json.load(json_file)
@@ -39,10 +42,17 @@ pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(60)
 
 state, mode, running = "stop", "training",  True
+n_img = 0
 model_loaded = False
 
 
 # ---------------- Different modes functions ----------------
+
+
+def get_gas_from_dir(dir):
+    return 0.2
+
+
 def default_call(img):
     pass
 
@@ -56,17 +66,40 @@ def autopilot(img):
         print('pred : ', pred)
         prediction = list(pred[0])
     index_class = prediction.index(max(prediction))
-    curr_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-    #curr_gas = get_gas_from_dir(curr_dir)
-    #print("curr_gas ", curr_gas)
-    pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+
+    local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
+    local_gas = get_gas_from_dir(curr_dir)
+
+    pwm.set_pwm(commands['direction'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+    if state == "start":
+        pwm.set_pwm(commands['gas'], 0, int(local_gas * (commands['drive_max'] - commands['drive']) + commands['drive']))
+    else:
+        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
+
+
+def dirauto(img):
+    global model, graph
+
+    img = np.array([img[80:, :, :]])
+    with graph.as_default():
+        pred = model.predict(img)
+        print('pred : ', pred)
+        prediction = list(pred[0])
+    index_class = prediction.index(max(prediction))
+
+    local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
+    pwm.set_pwm(commands['direction'], 0,
+                int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
 def training(img):
-    global curr_dir, curr_gas
-    
-    img_name = "frame" + "_gas_" + str(curr_gas) + "_dir_" + str(curr_dir)
-    pass
+    global n_img, curr_dir, curr_gas
+    image_name = os.path.join(save_folder, 'frame_' + str(n_img) + '_gas_' +
+                              str(curr_gas) + '_dir_' + str(curr_dir) +
+                              '_' + '.jpg')
+    img_arr = np.array(img[80:, :, :], copy=True)
+    scipy.misc.imsave(image_name, img_arr)
+    n_img += 1
 
 
 # ------------------- Main camera loop  ---------------------
@@ -74,7 +107,6 @@ def training(img):
 # to get camera pics
 def camera_loop():
     global state, mode_function, running
-    i = 0
 
     cam = picamera.PiCamera(framerate=fps)
     cam.resolution = cam_resolution
@@ -83,18 +115,17 @@ def camera_loop():
     
     for f in stream:
         img_arr = f.array
-        if not running: break
-        if state == "start":
-            mode_function(img_arr)
+        if not running:
+            break
+        mode_function(img_arr)
 
-        #print("state, mode are: ", state)
-        #time.sleep(0.3)
         cam_output.truncate(0)
 
 
 # ------------------ SocketIO callbacks-----------------------
 def on_model_selected(model_name):
-    global models_path, model, graph
+    global models_path, model_loaded, model, graph
+    model_loaded = True
     new_model_path = models_path + model_name + ".hdf5"
     print('Loading model at path : ', new_model_path)
     model = load_model(new_model_path)
@@ -106,10 +137,22 @@ def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
     mode = data
     if data == "dir_auto":
-        mode_function = dirauto
+        socketIO.off('dir')
+        if model_loaded:
+            mode_function = dirauto
+        else:
+            socketIO.emit('msg2user', 'Please load a model first')
     elif data == "auto":
-        mode_function = autopilot
+        socketIO.off('gas')
+        socketIO.off('dir')
+        if model_loaded:
+            mode_function = autopilot
+        else:
+            socketIO.emit('msg2user', 'Please load a model first')
     elif data == "training":
+
+        socketIO.on('gas', on_gas)
+        socketIO.on('dir', on_dir)
         mode_function = training
     else: 
         mode_function = default_call
@@ -123,32 +166,26 @@ def on_start(data):
 
 
 def on_dir(data):
-    global mode, curr_dir
-    if mode == "training":
-#        msg_in = data.split("_")
-        curr_dir = float(data)   
-#        curr_gas = float(msg_in[1])
-#        curr_dir = float(msg_in[3])
-        if curr_dir == 0:
-            #print(commands['straight'])
-            pwm.set_pwm(commands['direction'], 0 , commands['straight'])
-        else:
-            #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
-            pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+    global curr_dir
+    curr_dir = float(data)
+    if curr_dir == 0:
+        #print(commands['straight'])
+        pwm.set_pwm(commands['direction'], 0 , commands['straight'])
+    else:
+        #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+        pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
 
 def on_gas(data):
-    global mode, curr_gas
-    if mode == "training" or mode == "dir_auto":
-
-        curr_gas = float(data)
-        if curr_gas < 0:
-            pwm.set_pwm(commands['gas'], 0 , commands['stop'])
-        elif curr_gas == 0:
-            pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
-        else:
-            #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
-            pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+    global curr_gas
+    curr_gas = float(data)
+    if curr_gas < 0:
+        pwm.set_pwm(commands['gas'], 0 , commands['stop'])
+    elif curr_gas == 0:
+        pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+    else:
+        #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
+        pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
     
 
 # --------------- Starting server and threads ----------------

@@ -76,7 +76,15 @@ io.on('connection', function(client){
     client.on('disconnect', function(){
     	console.log('disconnected');
   	});
+
+    // Messages to send to the user
+    client.on('msg2user', function(message){
+        io.emit('msg2user', message);
+    });
+
+
 });
+
 
 
 server.listen(8000, function(){
