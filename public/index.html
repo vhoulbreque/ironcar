@@ -42,7 +42,7 @@
             var selectedModel = mySelect.selectedIndex;
 
             for (var i = oldOptions.length - 1; i >= 0  ; i--) {
-                if (mySelect.options[i].text !== mySelect.options[mySelect.selectedIndex].text) {
+                if (selectedModel == -1 || mySelect.options[i].text !== mySelect.options[mySelect.selectedIndex].text) {
                     mySelect.options.remove(i);
                 }else{
                     if (modelList.indexOf(mySelect.options[i].text) === -1 ){
@@ -51,14 +51,16 @@
                     }
                 }
             }
+            console.log("cleaned myselect", mySelect.options[0]);
             if (selectedModel === -1){
                 var option = document.createElement("option");
                 option.text = "";
                 mySelect.add(option);
-                mySelect.selectedIndex = 0;
+                mySelect.selectedIndex = mySelect.options.length;
             }else{
                 selectedModel = mySelect.options[mySelect.selectedIndex].text;
             }
+            console.log("selected model ", selectedModel, mySelect.options[mySelect.selectedIndex]);
             for (i = 0; i < modelList.length; i++) {
                 if (modelList[i] !== selectedModel){
                     option = document.createElement("option");
