@@ -34,6 +34,9 @@ commands_json_file = "commands.json"
 ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 save_folder = os.path.join('datasets/', str(ct))
 
+if not os.path.exists(save_folder):
+    os.makedirs(save_folder)
+
 with open(commands_json_file) as json_file:
     commands = json.load(json_file)
 
@@ -141,6 +144,7 @@ def on_switch_mode(data):
         if model_loaded:
             mode_function = dirauto
         else:
+            print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
     elif data == "auto":
         socketIO.off('gas')
@@ -148,6 +152,7 @@ def on_switch_mode(data):
         if model_loaded:
             mode_function = autopilot
         else:
+            print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
     elif data == "training":
 
