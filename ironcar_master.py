@@ -100,7 +100,6 @@ def on_model_selected(model_name):
     model = load_model(new_model_path)
     graph = tf.get_default_graph()
     print('Finished loading model')
-    pass
 
 
 def on_switch_mode(data):
