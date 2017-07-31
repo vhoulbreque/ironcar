@@ -100,13 +100,14 @@ def on_model_selected(model_name):
     model = load_model(new_model_path)
     graph = tf.get_default_graph()
     print('Finished loading model')
-    pass
 
 
 def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
     mode = data
     if data == "dir_auto":
+        mode_function = dirauto
+    elif data == "auto":
         mode_function = autopilot
     elif data == "training":
         mode_function = training
