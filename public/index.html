@@ -15,10 +15,8 @@
     </form>
     <form>
         <select name="autopilot_models" id="model_select" onchange="model_selected(this);">
-            <option name="empty option">                   </option>
         </select>
     </form>
-    <button id ="refresh_models" onclick="refresh_models()">Refresh autopilots models</button>
     <button id ="starter" onclick="starter()">Start</button>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -38,19 +36,44 @@
             document.getElementById("starter").innerHTML = states[started];
         }
 
-        function refresh_models(){
-            socket.emit('refresh_models', '1');
-        }
+        socket.on('new_available_model', function(modelList){
+            var mySelect = document.getElementById("model_select");
+            var oldOptions = mySelect.options;
+            var selectedModel = mySelect.selectedIndex;
 
-        socket.on('new_available_model', function(data){
-            var x = document.getElementById("model_select");
-            var option = document.createElement("option");
-            option.text = data;
-            option.onclick = "model_selected()";
-            x.add(option);
+            for (var i = oldOptions.length - 1; i >= 0  ; i--) {
+                if (mySelect.options[i].text !== mySelect.options[mySelect.selectedIndex].text) {
+                    mySelect.options.remove(i);
+                }else{
+                    if (modelList.indexOf(mySelect.options[i].text) === -1 ){
+                        mySelect.options.remove(i);
+                        selectedModel = -1;
+                    }
+                }
+            }
+            if (selectedModel === -1){
+                var option = document.createElement("option");
+                option.text = "";
+                mySelect.add(option);
+                mySelect.selectedIndex = 0;
+            }else{
+                selectedModel = mySelect.options[mySelect.selectedIndex].text;
+            }
+            for (i = 0; i < modelList.length; i++) {
+                if (modelList[i] !== selectedModel){
+                    option = document.createElement("option");
+                    option.text = modelList[i];
+                    mySelect.add(option);
+                }
+            }
         });
-        function model_selected(model_select){
-            socket.emit('model_update', model_select.selectedIndex - 1);
+
+        function model_selected(mySelect){
+            if (mySelect.options[0].text == ""){
+                mySelect.remove(0);
+            }
+            var modelName = mySelect.options[mySelect.selectedIndex].text;
+            socket.emit('model_update', modelName);
         }
 
     </script>
