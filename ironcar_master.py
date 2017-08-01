@@ -139,7 +139,7 @@ def on_model_selected(model_name):
 def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
     mode = data
-    if data == "dir_auto":
+    if data == "dirauto":
         socketIO.off('dir')
         if model_loaded:
             mode_function = dirauto
