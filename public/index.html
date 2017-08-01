@@ -77,7 +77,7 @@
         }
 
         // update the selected model in the radio page
-        socket.on('model_update', function(newMode){
+        socket.on('mode_update', function(newMode){
             var newModeIndex = modes.indexOf(newMode);
             var radios = document.getElementById("modesForm");
             radios[newModeIndex].checked = true;
