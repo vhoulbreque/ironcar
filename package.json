@@ -5,7 +5,7 @@
   "main": "car_server.js",
   "dependencies": {
     "express": "^4.15.3",
-    "socket.io": "^1.7.2"
+    "socket.io": "^1.7.4"
   },
   "devDependencies": {},
   "scripts": {
