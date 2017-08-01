@@ -46,7 +46,8 @@ pwm.set_pwm_freq(60)
 
 state, mode, running = "stop", "training",  True
 n_img = 0
-curr_dir, curr_gas = 0, 0 
+curr_dir, curr_gas = 0, 0
+current_model = None
 model_loaded = False
 
 
@@ -128,13 +129,15 @@ def camera_loop():
 
 # ------------------ SocketIO callbacks-----------------------
 def on_model_selected(model_name):
-    global models_path, model_loaded, model, graph
+    global current_model, models_path, model_loaded, model, graph
     model_loaded = True
+    if model_name == current_model: return 0
     new_model_path = models_path + model_name
     socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
     try:
         model = load_model(new_model_path)
         graph = tf.get_default_graph()
+        current_model = model_name
         socketIO.emit('msg2user', ' Model Loaded! Please select your mode again.')
     except OSError:
         socketIO.emit('msg2user', ' Failed loading model. Please select another one.')
