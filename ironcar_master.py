@@ -34,6 +34,9 @@ commands_json_file = "commands.json"
 ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 save_folder = os.path.join('datasets/', str(ct))
 
+if not os.path.exists(save_folder):
+    os.makedirs(save_folder)
+
 with open(commands_json_file) as json_file:
     commands = json.load(json_file)
 
@@ -43,6 +46,7 @@ pwm.set_pwm_freq(60)
 
 state, mode, running = "stop", "training",  True
 n_img = 0
+curr_dir, curr_gas = 0, 0 
 model_loaded = False
 
 
