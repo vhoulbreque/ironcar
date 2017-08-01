@@ -130,7 +130,7 @@ def camera_loop():
 def on_model_selected(model_name):
     global models_path, model_loaded, model, graph
     model_loaded = True
-    new_model_path = models_path + model_name + ".hdf5"
+    new_model_path = models_path + model_name
     print('Loading model at path : ', new_model_path)
     model = load_model(new_model_path)
     graph = tf.get_default_graph()
