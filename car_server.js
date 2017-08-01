@@ -14,7 +14,7 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/public/index.html');
 });
 
-var started = 0;
+var starter = "stopped";
 var currentMode = -1;
 var currentModel = -1;
 var currentStatus = -1;
@@ -40,7 +40,7 @@ io.on('connection', function(client){
     // Send the current state to the new clients
     if (currentMode != -1){ client.emit('mode_update', currentMode);}
     if (currentModel != -1){ client.emit('model_update', currentModel);}
-    client.emit('starterUpdate', started);
+    client.emit('starterUpdate', starter);
     if (currentStatus != -1){ client.emit('msg2user', currentStatus);}
     });
 
@@ -56,14 +56,13 @@ io.on('connection', function(client){
 
     // Starter button
     client.on('starter', function() {
-        if(started){
-            console.log('Started');
-            io.emit('starter', "start");
+        if(starter == "started"){
+            starter = "stopped";
         }else{
-            console.log("Stopped");
-            io.emit('starter', "stop");
+            starter = "started";
         }
-        started = 1 - started;
+        console.log(starter);
+        io.emit('starterUpdate', starter);
     });
 
     // Commands transfer

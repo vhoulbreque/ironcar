@@ -60,16 +60,15 @@
 
         // -------- STARTER -----------
 
-        var started = 1;
-        var states = ["Stop", "Start"];
         function starter(){
-            started = 1 - started;
             socket.emit('starter');
-            document.getElementById("starter").innerHTML = states[started];
         }
         socket.on('starterUpdate', function(data){
-            started = data;
-            document.getElementById("starter").innerHTML = states[started];
+            var state = 'Stop';
+            if (data == "stopped"){
+                state = 'Start';
+            }
+            document.getElementById("starter").innerHTML = state;
         });
         // -------- AUTOPILOT MODEL -----------
 
