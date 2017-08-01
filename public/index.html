@@ -7,7 +7,7 @@
 </head>
 <body style="background-image:url(background.jpg); background-size: 90% ">
     <h1>IronCar</h1>
-    <p id="Status">Please select a mode darling</p>
+    <p id="Status">Please run ironcar_master.py</p>
     <form>
         <input type="radio" name="mode" value="training" onclick="modeSwitched(0)"> Training<br>
         <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(1)"> Autopilot<br>
@@ -78,7 +78,7 @@
 
         // Message to the user
         socket.on('msg2user', function(message){
-            document.getElementById("Status").innerHTML.split("-")[0] += '-' + message;
+            document.getElementById("Status").innerHTML = document.getElementById("Status").innerHTML.split("-")[0] + '-' + message;
         });
 
     </script>
