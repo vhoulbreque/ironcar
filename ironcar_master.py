@@ -131,7 +131,7 @@ def camera_loop():
 def on_model_selected(model_name):
     global current_model, models_path, model_loaded, model, graph
     model_loaded = True
-    if model_name == current_model: return 0
+    if model_name == current_model or model_name == -1: return 0
     new_model_path = models_path + model_name
     socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
     try:
