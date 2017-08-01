@@ -90,6 +90,7 @@ io.on('connection', function(client){
         console.log(message);
         io.emit('msg2user', message);
     });
+    
 
 });
 

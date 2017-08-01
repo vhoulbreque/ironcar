@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body style="background-image:url(background.jpg); background-size: 90% ">
+<body style="background-image:url(background.jpg); background-size: 90% " id = "kinput">
     <h1>IronCar</h1>
     <p id="Status">Please run ironcar_master.py</p>
     <form id="modesForm">
@@ -22,6 +22,26 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
+
+        // -------- KEYBOARD INPUT -----------
+        kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
+
+        function handle(e) {
+            // Gas control
+            if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){ socket.emit("gas", -1);}
+            if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat){ socket.emit("gas", 1);}
+            if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){ socket.emit("gas", 0);}
+            if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){ socket.emit("gas", 0);}
+
+            // Direction control
+            if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){ socket.emit("dir", -1);}
+            if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){ socket.emit("dir", 1);}
+            if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){ socket.emit("dir", 0);}
+            if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){ socket.emit("dir", 0);}
+
+        }
+
+
 
         // -------- MODE -----------
 
@@ -93,12 +113,23 @@
             socket.emit('model_update', modelName);
         }
 
+        socket.on("model_update", function(modelSelected){
+            var mySelect = document.getElementById("model_select");
+            for (var i = 0; i < mySelect.options.length; i++) {
+                if (modelSelected == mySelect.options[i].text){
+                    var modelIndex = i;
+                }
+            }
+            mySelect.selectedIndex = modelIndex;
+        });
+
         // -------- USER INFO -----------
-        
+
         // Message to the user
         socket.on('msg2user', function(message){
             document.getElementById("Status").innerHTML = message;
         });
+
 
     </script>
 </body>
