@@ -93,13 +93,24 @@
             socket.emit('model_update', modelName);
         }
 
+        socket.on("model_update", function(modelSelected){
+            var mySelect = document.getElementById("model_select");
+            for (var i = 0; i < mySelect.options.length; i++) {
+                if (modelSelected == mySelect.options[i].text){
+                    var modelIndex = i;
+                }
+            }
+            mySelect.selectedIndex = modelIndex;
+        });
+
         // -------- USER INFO -----------
         
         // Message to the user
         socket.on('msg2user', function(message){
             document.getElementById("Status").innerHTML = message;
         });
-
+        
+        socket.emit('clientLoadedPage', true);
     </script>
 </body>
 </html>
