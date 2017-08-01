@@ -130,11 +130,12 @@ def camera_loop():
 def on_model_selected(model_name):
     global models_path, model_loaded, model, graph
     model_loaded = True
-    new_model_path = models_path + model_name + ".hdf5"
-    print('Loading model at path : ', new_model_path)
+    new_model_path = models_path + model_name
+
+    socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
     model = load_model(new_model_path)
     graph = tf.get_default_graph()
-    print('Finished loading model')
+    socketIO.emit('msg2user', ' Model Loaded! Please select your mode again.')
 
 
 def on_switch_mode(data):
@@ -144,14 +145,16 @@ def on_switch_mode(data):
         socketIO.off('dir')
         if model_loaded:
             mode_function = dirauto
+            socketIO.emit('msg2user', ' Direction auto mode. Please control the gas using a keyboard or a gamepad.')
         else:
             print("model not loaded")
-            socketIO.emit('msg2user', 'Please load a model first')
+            socketIO.emit('msg2user', ' Please load a model first')
     elif data == "auto":
         socketIO.off('gas')
         socketIO.off('dir')
         if model_loaded:
             mode_function = autopilot
+            socketIO.emit('msg2user', ' Autopilot mode. Use the start/stop button to free the gas command.')
         else:
             print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
@@ -160,8 +163,10 @@ def on_switch_mode(data):
         socketIO.on('gas', on_gas)
         socketIO.on('dir', on_dir)
         mode_function = training
+        socketIO.emit('msg2user', ' Training mode. Please use a keyboard or a gamepad for control.')
     else: 
         mode_function = default_call
+        socketIO.emit('msg2user', ' Resting')
     print('switched to mode : ', data)
 
 
@@ -197,9 +202,10 @@ def on_gas(data):
 # --------------- Starting server and threads ----------------
 mode_function = default_call
 socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
-
+socketIO.emit('msg2user', 'Starting Camera thread')
 camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
+socketIO.emit('msg2user', 'Camera thread started!')
 socketIO.on('mode_update', on_switch_mode)
 socketIO.on('model_update', on_model_selected)
 socketIO.on('starter', on_start)
