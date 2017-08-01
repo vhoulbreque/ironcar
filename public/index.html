@@ -22,12 +22,24 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
-        var modes = ["training", "auto", "dirauto", "rest"];
 
+        // -------- MODE -----------
+
+        var modes = ["training", "auto", "dirauto", "rest"];
         function modeSwitched(i){
             console.log(modes[i]);
             socket.emit("modeSwitched", modes[i]);
         }
+
+        // update the selected mode in the radio page
+        socket.on('mode_update', function(newMode){
+            var newModeIndex = modes.indexOf(newMode);
+            var radios = document.getElementById("modesForm");
+            radios[newModeIndex].checked = true;
+        });
+
+        // -------- STARTER -----------
+
         var started = 1;
         var states = ["Stop", "Start"];
         function starter(){
@@ -35,6 +47,11 @@
             socket.emit('starter');
             document.getElementById("starter").innerHTML = states[started];
         }
+        socket.on('starterUpdate', function(data){
+            started = data;
+            document.getElementById("starter").innerHTML = states[started];
+        });
+        // -------- AUTOPILOT MODEL -----------
 
         socket.on('new_available_model', function(modelList){
             var mySelect = document.getElementById("model_select");
@@ -76,15 +93,7 @@
             socket.emit('model_update', modelName);
         }
 
-        // update the selected model in the radio page
-        socket.on('mode_update', function(newMode){
-            var newModeIndex = modes.indexOf(newMode);
-            var radios = document.getElementById("modesForm");
-            radios[newModeIndex].checked = true;
-
-        });
-
-
+        // -------- USER INFO -----------
         // Message to the user
         socket.on('msg2user', function(message){
             document.getElementById("Status").innerHTML = message;

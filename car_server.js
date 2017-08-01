@@ -15,6 +15,8 @@ app.get('/', function(req, res){
 });
 
 var started = 0;
+var currentMode = -1;
+var currentModel = -1;
 
 function find_models(folder){
     var autopilot_models = [];
@@ -33,7 +35,12 @@ fs.watch(testFolder, function (event, filename) {
 
 io.on('connection', function(client){
     console.log('connected');
-
+    
+    // Send the current state to the new clients
+    client.emit('mode_update', currentMode);
+    client.emit('model_update', currentModel);
+    client.emit('starterUpdate', started);
+    
     //charge available models found
     find_models(testFolder);
 
@@ -41,6 +48,7 @@ io.on('connection', function(client){
     client.on('modeSwitched', function(data) {
         console.log('selected mode: ' + data);
         io.emit('mode_update', data);
+        currentMode = data;
     });
 
     // Starter button
@@ -48,6 +56,7 @@ io.on('connection', function(client){
         if(started){
             console.log('Started');
             io.emit('starter', "start");
+            current
         }else{
             console.log("Stopped");
             io.emit('starter', "stop");
@@ -67,6 +76,7 @@ io.on('connection', function(client){
         if (data != " "){
             console.log('model_update', data);
             io.emit('model_update', data);
+            currentModel = data;
         }
     });
 
