@@ -11,7 +11,8 @@
     <form>
         <input type="radio" name="mode" value="training" onclick="modeSwitched(0)"> Training<br>
         <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(1)"> Autopilot<br>
-        <input type="radio" name="mode" value="direction auto" onclick="modeSwitched(2)"> Direction auto
+        <input type="radio" name="mode" value="direction auto" onclick="modeSwitched(2)"> Direction auto<br>
+        <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(3)"> Rest
     </form>
     <form>
         <select name="autopilot_models" id="model_select" onchange="model_selected(this);">
@@ -21,7 +22,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
-        var modes = ["training", "auto", "dirauto"];
+        var modes = ["training", "auto", "dirauto", "rest"];
 
         function modeSwitched(i){
             console.log(modes[i]);
