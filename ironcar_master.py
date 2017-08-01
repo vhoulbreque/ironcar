@@ -131,7 +131,6 @@ def on_model_selected(model_name):
     global models_path, model_loaded, model, graph
     model_loaded = True
     new_model_path = models_path + model_name
-
     socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
     model = load_model(new_model_path)
     graph = tf.get_default_graph()
