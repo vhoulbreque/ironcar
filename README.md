@@ -13,6 +13,11 @@ The node packages are to be installed using package.json.
 ### Troubleshooting
 
 ## Launching
+In order to communicate between the car, the laptop and another device like a smartphone,
+we used socketio on python and nodejs.Therefore, we need to launch a server node on the raspi
+and clients on other devices. A python client on the raspi ensure the communication with the 
+car hardware (motors, camera  and other potential sensors if you want to add any).
+
 
 ### On the raspberry pi
 Two programs are to be launched on the raspi. You can use screen if you don't want to carry 
@@ -36,5 +41,6 @@ choose the mode, the model, the speed, and control the car with a keyboard.
  
 
 ## Details
+
 
 
