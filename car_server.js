@@ -69,9 +69,11 @@ io.on('connection', function(client){
     // Commands transfer
     client.on('dir', function(data){
         io.emit('dir', data);
+        //console.log(data);
     });
     client.on('gas', function(data){
         io.emit('gas', data);
+        //console.log(data);
     });
 
     client.on('model_update', function(data){

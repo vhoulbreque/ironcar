@@ -145,6 +145,8 @@ def on_model_selected(model_name):
 
 def on_switch_mode(data):
     global mode, mode_function, model_loaded, model, graph
+    # Stop the gas before switching mode
+    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
     mode = data
     if data == "dirauto":
         socketIO.off('dir')
