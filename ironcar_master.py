@@ -145,6 +145,7 @@ def on_switch_mode(data):
         if model_loaded:
             mode_function = dirauto
         else:
+            print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
     elif data == "auto":
         socketIO.off('gas')
@@ -152,6 +153,7 @@ def on_switch_mode(data):
         if model_loaded:
             mode_function = autopilot
         else:
+            print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
     elif data == "training":
 
