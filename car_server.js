@@ -79,6 +79,7 @@ io.on('connection', function(client){
 
     // Messages to send to the user
     client.on('msg2user', function(message){
+        console.log(message);
         io.emit('msg2user', message);
     });
 

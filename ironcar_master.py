@@ -46,6 +46,7 @@ pwm.set_pwm_freq(60)
 
 state, mode, running = "stop", "training",  True
 n_img = 0
+curr_dir, curr_gas = 0, 0 
 model_loaded = False
 
 
