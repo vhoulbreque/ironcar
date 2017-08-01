@@ -132,9 +132,12 @@ def on_model_selected(model_name):
     model_loaded = True
     new_model_path = models_path + model_name
     socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
-    model = load_model(new_model_path)
-    graph = tf.get_default_graph()
-    socketIO.emit('msg2user', ' Model Loaded! Please select your mode again.')
+    try:
+        model = load_model(new_model_path)
+        graph = tf.get_default_graph()
+        socketIO.emit('msg2user', ' Model Loaded! Please select your mode again.')
+    except OSError:
+        socketIO.emit('msg2user', ' Failed loading model. Please select another one.')
 
 
 def on_switch_mode(data):

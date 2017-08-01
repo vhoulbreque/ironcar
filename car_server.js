@@ -14,7 +14,7 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/public/index.html');
 });
 
-started = 0;
+var started = 0;
 
 function find_models(folder){
     var autopilot_models = [];
@@ -25,8 +25,6 @@ function find_models(folder){
     });
     io.emit('new_available_model', autopilot_models);
 }
-
-
 
 fs.watch(testFolder, function (event, filename) {
     console.log(event);
@@ -83,10 +81,7 @@ io.on('connection', function(client){
         io.emit('msg2user', message);
     });
 
-
 });
-
-
 
 server.listen(8000, function(){
   	console.log('listening on 8000');

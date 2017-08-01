@@ -8,7 +8,7 @@
 <body style="background-image:url(background.jpg); background-size: 90% ">
     <h1>IronCar</h1>
     <p id="Status">Please run ironcar_master.py</p>
-    <form>
+    <form id="modesForm">
         <input type="radio" name="mode" value="training" onclick="modeSwitched(0)"> Training<br>
         <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(1)"> Autopilot<br>
         <input type="radio" name="mode" value="direction auto" onclick="modeSwitched(2)"> Direction auto<br>
@@ -75,6 +75,15 @@
             var modelName = mySelect.options[mySelect.selectedIndex].text;
             socket.emit('model_update', modelName);
         }
+
+        // update the selected model in the radio page
+        socket.on('model_update', function(newMode){
+            var newModeIndex = modes.indexOf(newMode);
+            var radios = document.getElementById("modesForm");
+            radios[newModeIndex].checked = true;
+
+        });
+
 
         // Message to the user
         socket.on('msg2user', function(message){
