@@ -19,6 +19,8 @@
         </select>
     </form>
     <button id ="starter" onclick="starter()">Start</button>
+    <p id="maxSpeed">Max speed limit: 50%</p>
+    <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate()">
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
@@ -40,6 +42,20 @@
             if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){ socket.emit("dir", 0);}
 
         }
+
+        // -------- MAX SPEED UPDATE -----------
+
+        function maxSpeedUdate(){
+            var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
+            document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + newMaxSpeed + "%";
+            socket.emit("maxSpeed", newMaxSpeed / 100.);
+        }
+
+        // update the current max speed
+        socket.on('maxSpeedUpdate', function(maxSpeed){
+            document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + Math.round(maxSpeed * 100) + "%";
+            document.getElementById("maxSpeedSlider").value = maxSpeed * 100;
+        });
 
 
 

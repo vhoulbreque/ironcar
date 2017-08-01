@@ -48,6 +48,7 @@ state, mode, running = "stop", "training",  True
 n_img = 0
 curr_dir, curr_gas = 0, 0
 current_model = None
+max_speed_rate = 0.5
 model_loaded = False
 
 
@@ -63,7 +64,7 @@ def default_call(img):
 
 
 def autopilot(img):
-    global model, graph, state
+    global model, graph, state, max_speed_rate
 
     img = np.array([img[80:, :, :]])
     with graph.as_default():
@@ -73,7 +74,7 @@ def autopilot(img):
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-    local_gas = get_gas_from_dir(curr_dir)
+    local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
 
     pwm.set_pwm(commands['direction'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
     if state == "started":
@@ -195,16 +196,20 @@ def on_dir(data):
 
 
 def on_gas(data):
-    global curr_gas
-    curr_gas = float(data)
+    global curr_gas, max_speed_rate
+    curr_gas = float(data) * max_speed_rate
     if curr_gas < 0:
-        pwm.set_pwm(commands['gas'], 0 , commands['stop'])
+        pwm.set_pwm(commands['gas'], 0, commands['stop'])
     elif curr_gas == 0:
-        pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
     else:
         #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
-        pwm.set_pwm(commands['gas'], 0 , int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+        pwm.set_pwm(commands['gas'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
     
+
+def on_max_speed_update(new_max_speed):
+    global max_speed_rate
+    max_speed_rate = new_max_speed
 
 # --------------- Starting server and threads ----------------
 mode_function = default_call
@@ -216,6 +221,7 @@ socketIO.emit('msg2user', 'Camera thread started! Please select a mode.')
 socketIO.on('mode_update', on_switch_mode)
 socketIO.on('model_update', on_model_selected)
 socketIO.on('starterUpdate', on_start)
+socketIO.on('maxSpeedUpdate', on_max_speed_update)
 socketIO.on('gas', on_gas)
 socketIO.on('dir', on_dir)
 

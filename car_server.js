@@ -18,6 +18,7 @@ var starter = "stopped";
 var currentMode = -1;
 var currentModel = -1;
 var currentStatus = -1;
+var currentMaxSpeed = 0.5;
 
 function find_models(folder){
     var autopilot_models = [];
@@ -43,6 +44,7 @@ io.on('connection', function(client){
     client.emit('starterUpdate', starter);
     if (currentStatus != -1){ client.emit('msg2user', currentStatus);}
     });
+    client.emit('maxSpeedUpdate', currentMaxSpeed);
 
     //charge available models found
     find_models(testFolder);
@@ -65,6 +67,13 @@ io.on('connection', function(client){
         io.emit('starterUpdate', starter);
     });
 
+    // Max speed update
+    client.on('maxSpeed', function(maxSpeed) {
+        io.emit('maxSpeedUpdate', maxSpeed);
+        currentMaxSpeed = maxSpeed;
+    });
+    
+    
     // Commands transfer
     client.on('dir', function(data){
         io.emit('dir', data);
