@@ -6,6 +6,8 @@ var fs = require('fs');
 
 const testFolder = './autopilots/';
 
+const IP = 'localhost';
+const PORT = 7000;
 
 app.use(express.static(__dirname + '/public'));
 
@@ -106,8 +108,8 @@ io.on('connection', function(client){
 
 });
 
-server.listen(8000, function(){
-  	console.log('listening on 8000');
+server.listen(IP, PORT, function(){
+  	console.log('listening on ' + IP + ':' + PORT);
 });
 
 

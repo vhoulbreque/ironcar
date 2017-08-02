@@ -130,8 +130,7 @@ def camera_loop():
 
 # ------------------ SocketIO callbacks-----------------------
 def on_model_selected(model_name):
-    global current_model, models_path, model_loaded, model, graph
-    model_loaded = True
+    global current_model, models_path, model_loaded, model, graph, mode
     if model_name == current_model or model_name == -1: return 0
     new_model_path = models_path + model_name
     socketIO.emit('msg2user', 'Loading model at path : ' + str(new_model_path))
@@ -139,7 +138,9 @@ def on_model_selected(model_name):
         model = load_model(new_model_path)
         graph = tf.get_default_graph()
         current_model = model_name
-        socketIO.emit('msg2user', ' Model Loaded! Please select your mode again.')
+        socketIO.emit('msg2user', ' Model Loaded!')
+        model_loaded = True
+        on_switch_mode(mode)
     except OSError:
         socketIO.emit('msg2user', ' Failed loading model. Please select another one.')
 
