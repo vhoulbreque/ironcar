@@ -113,6 +113,10 @@ io.on('connection', function(client){
 
 });
 
+io.on('error', function(data){
+    console.log(data);
+});
+
 
 
 Object.keys(ifaces).forEach(function (ifname) {
