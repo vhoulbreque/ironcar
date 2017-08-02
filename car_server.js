@@ -114,6 +114,7 @@ io.on('connection', function(client){
 });
 
 
+
 Object.keys(ifaces).forEach(function (ifname) {
   var alias = 0;
 
@@ -124,7 +125,7 @@ Object.keys(ifaces).forEach(function (ifname) {
     }
 
     if (alias == 0) {
-      console.log(ifname, iface.address);
+      console.log("raspberry pi IP on ", ifname, " : ", iface.address);
     }
     ++alias;
   });
