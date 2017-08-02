@@ -127,6 +127,7 @@ def camera_loop():
 
 
 # ------------------ SocketIO callbacks-----------------------
+# This will try to load a model when receiving a callback from the node server
 def on_model_selected(model_name):
     global current_model, models_path, model_loaded, model, graph, mode
     if model_name == current_model or model_name == -1: return 0
@@ -144,7 +145,11 @@ def on_model_selected(model_name):
 
 
 def on_switch_mode(data):
-    global mode, mode_function, model_loaded, model, graph
+    global mode, state, mode_function, model_loaded, model, graph
+    # always switch the starter to stopped when switching mode
+    if state == "started":
+        state = "stopped"
+        socketIO.emit('starter')
     # Stop the gas before switching mode
     pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
     mode = data
@@ -166,7 +171,6 @@ def on_switch_mode(data):
             print("model not loaded")
             socketIO.emit('msg2user', 'Please load a model first')
     elif data == "training":
-
         socketIO.on('gas', on_gas)
         socketIO.on('dir', on_dir)
         mode_function = training
@@ -175,6 +179,8 @@ def on_switch_mode(data):
         mode_function = default_call
         socketIO.emit('msg2user', ' Resting')
     print('switched to mode : ', data)
+    # Make sure we stop even if the previous mode sent a last command before switching.
+    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
 
 
 def on_start(data):
