@@ -3,10 +3,12 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var fs = require('fs');
+var os = require('os');
+var ifaces = os.networkInterfaces();
 
 const testFolder = './autopilots/';
 
-const IP = 'localhost';
+const IP = '0.0.0.0';
 const PORT = 8000;
 
 app.use(express.static(__dirname + '/public'));
@@ -38,7 +40,9 @@ fs.watch(testFolder, function (event, filename) {
 });
 
 io.on('connection', function(client){
-    console.log('connected');
+    var address = client.handshake.address;
+    console.log(address + ' connected');
+
     client.on('clientLoadedPage', function(){        
     // Send the current state to the new clients
     if (currentMode != -1){ client.emit('mode_update', currentMode);}
@@ -96,7 +100,8 @@ io.on('connection', function(client){
 
 
     client.on('disconnect', function(){
-    	console.log('disconnected');
+        var address = client.handshake.address; 
+   	console.log( address + ' disconnected');
     });
 
     // Messages to send to the user
@@ -108,8 +113,26 @@ io.on('connection', function(client){
 
 });
 
-server.listen(IP, PORT, function(){
-  	console.log('listening on ' + IP + ':' + PORT);
+
+Object.keys(ifaces).forEach(function (ifname) {
+  var alias = 0;
+
+  ifaces[ifname].forEach(function (iface) {
+    if ('IPv4' !== iface.family || iface.internal !== false) {
+      // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+      return;
+    }
+
+    if (alias == 0) {
+      console.log(ifname, iface.address);
+    }
+    ++alias;
+  });
+});
+
+
+server.listen(PORT, function(){
+  	console.log('listening on ' +  PORT);
 });
 
 
