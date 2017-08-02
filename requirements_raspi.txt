@@ -1,0 +1,8 @@
+numpy
+scipy
+socketIO-client
+Adafruit_PCA9685
+Adafruit_BNO055
+picamera
+keras
+#tensorflow
