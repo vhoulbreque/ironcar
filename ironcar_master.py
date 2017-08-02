@@ -7,11 +7,9 @@ import datetime
 
 import picamera
 import picamera.array
-from PIL import Image
 
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
-#from utils import ArgumentError, initialize_imu
 
 from keras.models import load_model
 import tensorflow as tf

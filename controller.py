@@ -10,9 +10,6 @@ socketIO = SocketIO(IP, port=PORT, wait_for_connection=False)
 
 def gamepad_ctrl():
     quit_gp = False
-    gas, dir = 0, 0
-    drop = 3
-    i = 0
     while not quit_gp:
         events = get_gamepad()
         for event in events:
