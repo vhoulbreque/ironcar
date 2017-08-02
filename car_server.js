@@ -7,7 +7,7 @@ var fs = require('fs');
 const testFolder = './autopilots/';
 
 const IP = 'localhost';
-const PORT = 7000;
+const PORT = 8000;
 
 app.use(express.static(__dirname + '/public'));
 
