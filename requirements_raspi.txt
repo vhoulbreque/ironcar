@@ -6,3 +6,4 @@ Adafruit_BNO055
 picamera
 keras==1.2.0
 #tensorflow
+h5py==2.7.0
