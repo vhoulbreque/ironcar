@@ -1,6 +1,6 @@
 # IronCar
 ## Summary
-The IronCar project is made for those who need an easy setup for an autonomous vehicle like an RC car using a raspberrypy. 
+The IronCar project is made for those who need an easy setup for an autonomous vehicle like an RC car using a raspberrypi. 
 It was made by the team from XBrain.
 We created two branches: 
 * a ROS based project on the master branch. We originally started with ROS as it is an easy framework to setup such robotic systems that require asynchronous commands.
