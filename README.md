@@ -1,4 +1,7 @@
 # IronCar
+
+Google doc with tutorial https://docs.google.com/document/d/1jyRhlbmthMA_DuuulYnzUT38okIF_KFZH0a4hh8NCg8/edit?usp=sharing .
+
 ## Summary
 The IronCar project is made for those who need an easy setup for an autonomous vehicle like an RC car using a raspberrypi. 
 It was made by the team from XBrain.
