@@ -4,15 +4,20 @@ Google doc with tutorial https://docs.google.com/document/d/1jyRhlbmthMA_DuuulYn
 
 ## SETUP
 
-### Easy setup with install.sh
+### Raspberry pi
+#### Easy setup with install.sh
 
-You can easily setup everything on the raspi using the install.sh bash. Just launching `. /install.sh` will install keras, tensorflow, nodejs and some other dependencies in the requirements. This should take 2-3 hours... (scipy is very long to install). At the end of the install, it will ask you if you want to let us configure the raspi for you enabling the pi camera, i2c connections and augmenting the swap size which is very small by default. 
+You can easily setup everything on the raspi using the install.sh bash. Just launching `. /install.sh` on the raspi will install keras, tensorflow, nodejs and some other dependencies in the requirements. This should take 2-3 hours... (scipy is very long to install). At the end of the install, it will ask you if you want to let us configure the raspi for you enabling the pi camera, i2c connections and augmenting the swap size which is very small by default. 
 And that's it, you should be ready to go to the Launching part!!
 
-### Manual setup
+#### Manual setup
 
 You can install the requirements from requirements_raspi yourself, but you will need to install tensorflow as well as nodejs and npm. You will also need to install the node packages from packages.json. 
 Last you will need to configure your camera and any other device to be enabled on the pi. 
+
+### Laptop
+You need to install the requirements_laptop.txt on your laptop only if you want to train your car with a gamepad and with the controller.py script. 
+Otherwize, there is nothing needed for this part on the laptop, you will only use your browser to connect to the raspi via a node client. 
 
 ### Troubleshooting
 
