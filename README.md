@@ -7,7 +7,7 @@ Google doc with tutorial https://docs.google.com/document/d/1jyRhlbmthMA_DuuulYn
 ### Raspberry pi
 #### Easy setup with install.sh
 
-You can easily setup everything on the raspi using the install.sh bash. Just launching `. /install.sh` on the raspi will install keras, tensorflow, nodejs and some other dependencies in the requirements. This should take 2-3 hours... (scipy is very long to install). At the end of the install, it will ask you if you want to let us configure the raspi for you enabling the pi camera, i2c connections and augmenting the swap size which is very small by default. 
+You can easily setup everything on the raspi using the install.sh bash. Just launching `./install.sh` on the raspi will install keras, tensorflow, nodejs and some other dependencies in the requirements. This should take 2-3 hours... (scipy is very long to install). At the end of the install, it will ask you if you want to let us configure the raspi for you enabling the pi camera, i2c connections and augmenting the swap size which is very small by default. 
 And that's it, you should be ready to go to the Launching part!!
 
 #### Manual setup
