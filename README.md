@@ -58,5 +58,5 @@ As an example, we used a xbox gamepad and listened to the left joystick for dire
 
 ### On any device
 The user interface is a javascript client that can be launched in any browser in theory 
-(chrome and safari have been tested). Just go to `YOUR_RASPI_IP:8000` and you should be able to 
+(firefox, chrome and safari have been tested). Just go to `YOUR_RASPI_IP:8000` and you should be able to 
 choose the mode, the model, the speed, and control the car with a keyboard (the keyboard is obviously not supported if you connect from a smartphone!).
