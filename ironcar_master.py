@@ -42,7 +42,7 @@ with open(commands_json_file) as json_file:
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(60)
 
-state, mode, running = "stop", "training",  True
+state, mode, running = "stop", "resting",  True
 n_img = 0
 curr_dir, curr_gas = 0, 0
 current_model = None
