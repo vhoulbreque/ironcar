@@ -74,6 +74,3 @@ It is way too long to train the car by driving it with a remote controller. That
 ### Model
 
 The model is also given [there](https://github.com/vinzeebreak/road_simulator).
-
-
-
