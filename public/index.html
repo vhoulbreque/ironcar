@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+    <title>IronCar</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body style="background-image:url(background.jpg); background-size: 90% " id = "kinput">
+    <h1>IronCar</h1>
+    <p id="Status">Please run ironcar_master.py</p>
+    <form id="modesForm">
+        <input type="radio" name="mode" value="training" onclick="modeSwitched(0)"> Training<br>
+        <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(1)"> Autopilot<br>
+        <input type="radio" name="mode" value="direction auto" onclick="modeSwitched(2)"> Direction auto<br>
+        <input type="radio" name="mode" value="autopilot" onclick="modeSwitched(3)"> Rest
+    </form>
+    <form>
+        <select name="autopilot_models" id="model_select" onchange="model_selected(this);">
+        </select>
+    </form>
+    <button id ="starter" onclick="starter()">Start</button>
+    <p id="maxSpeed">Max speed limit: 50%</p>
+    <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate()">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect();
+
+        // -------- KEYBOARD INPUT -----------
+        kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
+
+        function handle(e) {
+            // Gas control
+            if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){ socket.emit("gas", -1);}
+            if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat){ socket.emit("gas", 1);}
+            if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){ socket.emit("gas", 0);}
+            if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){ socket.emit("gas", 0);}
+
+            // Direction control
+            if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){ socket.emit("dir", -1);}
+            if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){ socket.emit("dir", 1);}
+            if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){ socket.emit("dir", 0);}
+            if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){ socket.emit("dir", 0);}
+
+        }
+
+        // -------- MAX SPEED UPDATE -----------
+
+        function maxSpeedUdate(){
+            var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
+            document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + newMaxSpeed + "%";
+            socket.emit("maxSpeed", newMaxSpeed / 100.);
+        }
+
+        // update the current max speed
+        socket.on('maxSpeedUpdate', function(maxSpeed){
+            document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + Math.round(maxSpeed * 100) + "%";
+            document.getElementById("maxSpeedSlider").value = maxSpeed * 100;
+        });
+
+
+
+        // -------- MODE -----------
+
+        var modes = ["training", "auto", "dirauto", "rest"];
+        function modeSwitched(i){
+            console.log(modes[i]);
+            socket.emit("modeSwitched", modes[i]);
+        }
+
+        // update the selected mode in the radio page
+        socket.on('mode_update', function(newMode){
+            var newModeIndex = modes.indexOf(newMode);
+            var radios = document.getElementById("modesForm");
+            radios[newModeIndex].checked = true;
+        });
+
+        // -------- STARTER -----------
+
+        function starter(){
+            socket.emit('starter');
+        }
+        socket.on('starterUpdate', function(data){
+            var state = 'Stop';
+            if (data == "stopped"){
+                state = 'Start';
+            }
+            document.getElementById("starter").innerHTML = state;
+        });
+        // -------- AUTOPILOT MODEL -----------
+
+        socket.on('new_available_model', function(modelList){
+            var mySelect = document.getElementById("model_select");
+            var oldOptions = mySelect.options;
+            var selectedModel = mySelect.selectedIndex;
+
+            for (var i = oldOptions.length - 1; i >= 0  ; i--) {
+                if (selectedModel == -1 || mySelect.options[i].text !== mySelect.options[mySelect.selectedIndex].text) {
+                    mySelect.options.remove(i);
+                }else{
+                    if (modelList.indexOf(mySelect.options[i].text) === -1 ){
+                        mySelect.options.remove(i);
+                        selectedModel = -1;
+                    }
+                }
+            }
+            if (selectedModel === -1){
+                var option = document.createElement("option");
+                option.text = "";
+                mySelect.add(option);
+                mySelect.selectedIndex = mySelect.options.length;
+            }else{
+                selectedModel = mySelect.options[mySelect.selectedIndex].text;
+            }
+            for (i = 0; i < modelList.length; i++) {
+                if (modelList[i] !== selectedModel){
+                    option = document.createElement("option");
+                    option.text = modelList[i];
+                    mySelect.add(option);
+                }
+            }
+        });
+
+        function model_selected(mySelect){
+            if (mySelect.options[0].text == ""){
+                mySelect.remove(0);
+            }
+            var modelName = mySelect.options[mySelect.selectedIndex].text;
+            socket.emit('model_update', modelName);
+        }
+
+        socket.on("model_update", function(modelSelected){
+            var mySelect = document.getElementById("model_select");
+            for (var i = 0; i < mySelect.options.length; i++) {
+                if (modelSelected == mySelect.options[i].text){
+                    var modelIndex = i;
+                }
+            }
+            mySelect.selectedIndex = modelIndex;
+        });
+
+        // -------- USER INFO -----------
+
+        // Message to the user
+        socket.on('msg2user', function(message){
+            document.getElementById("Status").innerHTML = message;
+        });
+        
+        socket.emit('clientLoadedPage', true);
+    </script>
+</body>
+</html>
