@@ -1,6 +1,3 @@
-# The up-to-date version is in the fork from xbraininc: https://github.com/xbraininc/ironcar
-
-
 # IRONCAR NODE
 
 Google doc with tutorial https://docs.google.com/document/d/1jyRhlbmthMA_DuuulYnzUT38okIF_KFZH0a4hh8NCg8/edit?usp=sharing .
@@ -63,3 +60,20 @@ As an example, we used a xbox gamepad and listened to the left joystick for dire
 The user interface is a javascript client that can be launched in any browser in theory 
 (firefox, chrome and safari have been tested). Just go to `YOUR_RASPI_IP:8000` and you should be able to 
 choose the mode, the model, the speed, and control the car with a keyboard (the keyboard is obviously not supported if you connect from a smartphone!).
+
+## Training
+
+In order to train the car to drive itself, you need 2 things:
+- some data of the race
+- a model
+
+### Data
+
+It is way too long to train the car by driving it with a remote controller. That's why we created a simulator. Nothing too fancy, it's quite easy to use. Just go [there](https://github.com/vinzeebreak/road_simulator) and follow the instructions.
+
+### Model
+
+The model is also given [there](https://github.com/vinzeebreak/road_simulator).
+
+
+
