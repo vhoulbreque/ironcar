@@ -20,7 +20,7 @@ sudo pip3 install -r requirements_raspi.txt
 var=`python3 -c 'import sys; print(sys.version_info[:])'`  # Get the Python version
 set -- $var
 v=$2  # version number
-v=${v2:0:1}
+v=${v:0:1}
 
 if [ $v -eq 4 ];
 then
