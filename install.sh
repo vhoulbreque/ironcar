@@ -15,8 +15,6 @@ sudo apt-get install nodejs -y
 
 
 # Python
-echo "Installing Python Requirements"
-
 sudo pip3 install -r requirements_raspi.txt
 
 var=`python3 -c 'import sys; print(sys.version_info[:])'`  # Get the Python version
@@ -41,7 +39,6 @@ else
 fi
 
 # Npm
-echo "Installing Node Requirements"
 npm install
 
 
@@ -134,3 +131,4 @@ if [ "$CONT" = "y" ]; then
 else
   echo "This install needs a reboot to finish"
 fi
+
