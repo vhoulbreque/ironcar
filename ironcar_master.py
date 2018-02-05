@@ -191,7 +191,7 @@ def on_start(data):
 
 def on_dir(data):
     global curr_dir
-    curr_dir = float(data)
+    curr_dir = commands['invert_dir'] * float(data)
     if curr_dir == 0:
         #print(commands['straight'])
         pwm.set_pwm(commands['direction'], 0 , commands['straight'])

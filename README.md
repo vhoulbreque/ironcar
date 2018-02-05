@@ -25,7 +25,7 @@ Last you will need to configure your camera and any other device to be enabled o
 ### Laptop
 You need to install the `requirements_laptop.txt` on your laptop only if you want to train your car with a gamepad and with the `controller.py` script. You can do it like this:
 ```
-$ pip3 install requirements_laptop.txt
+$ pip3 install -r requirements_laptop.txt
 ```
 Otherwize, there is nothing needed for this part on the laptop, you will only use your browser to connect to the raspi via a node client. 
 
