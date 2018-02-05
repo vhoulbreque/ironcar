@@ -33,6 +33,7 @@ then
     wget https://www.dropbox.com/s/gy4kockdbdyx85j/tensorflow-1.0.1-cp35-cp35m-linux_armv7l.whl?dl=1
     mv tensorflow-1.0.1-cp35-cp35m-linux_armv7l.whl?dl=1 tensorflow-1.0.1-cp35-cp35m-linux_armv7l.whl
     sudo pip3 install tensorflow-1.0.1-cp35-cp35m-linux_armv7l.whl
+    pip3 install numpy==1.14.0
 else
     echo "There is no good version of Python";
     python3 --version
