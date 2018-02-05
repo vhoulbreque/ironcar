@@ -1,12 +1,10 @@
 from inputs import get_gamepad
 from socketIO_client import SocketIO
 
-
 PORT = 8000
-IP = 'http://192.168.42.1'
+IP = 'http://10.69.2.114'
 
 socketIO = SocketIO(IP, port=PORT, wait_for_connection=False)
-
 
 def gamepad_ctrl():
     quit_gp = False
