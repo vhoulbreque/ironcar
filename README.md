@@ -7,7 +7,7 @@ Google doc with tutorial https://docs.google.com/document/d/1jyRhlbmthMA_DuuulYn
 ## SETUP
 
 ### Raspberry Pi
-Clone this repo on your Rpi :
+Clone this repo on your Raspberry Pi :
 
 ```
 git clone https://github.com/vinzeebreak/ironcar.git
