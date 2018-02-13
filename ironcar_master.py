@@ -1,4 +1,5 @@
 from socketIO_client import SocketIO
+import socket
 from threading import Thread
 
 import sys, os, time
@@ -11,8 +12,8 @@ import picamera.array
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
 
-from keras.models import load_model
-import tensorflow as tf
+#from keras.models import load_model
+#import tensorflow as tf
 import numpy as np
 import json
 
@@ -48,6 +49,7 @@ curr_dir, curr_gas = 0, 0
 current_model = None
 max_speed_rate = 0.5
 model_loaded = False
+streaming_state = True
 
 
 # ---------------- Different modes functions ----------------
@@ -116,12 +118,17 @@ def camera_loop():
     cam.resolution = cam_resolution
     cam_output = picamera.array.PiRGBArray(cam, size=cam_resolution)
     stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
-    
+
     for f in stream:
         img_arr = f.array
         if not running:
             break
         mode_function(img_arr)
+
+        if streaming_state:
+            image_name = 'img_stream.jpg'
+            scipy.misc.imsave(image_name, img_arr)
+            socketIO.emit(image_name)
 
         cam_output.truncate(0)
 
@@ -216,9 +223,23 @@ def on_max_speed_update(new_max_speed):
     global max_speed_rate
     max_speed_rate = new_max_speed
 
+
+def on_streaming_update(new_streaming_state):
+    global streaming_state
+    streaming_state = new_streaming_state
+
+
 # --------------- Starting server and threads ----------------
+print('#' * 50)
+print('Starting the sockets')
+
 mode_function = default_call
 socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
+#socketIO = socket.socket()
+#socketIO.bind(('0.0.0.0', 8000))
+#socketIO.bind(('127.0.0.1', 8000))
+
+
 socketIO.emit('msg2user', 'Starting Camera thread')
 camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
@@ -229,6 +250,7 @@ socketIO.on('starterUpdate', on_start)
 socketIO.on('maxSpeedUpdate', on_max_speed_update)
 socketIO.on('gas', on_gas)
 socketIO.on('dir', on_dir)
+socketIO.on('streaming_update', on_streaming_update)
 
 try:
     socketIO.wait()
