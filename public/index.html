@@ -54,10 +54,21 @@
         <button id="starter" type="submit" class="btn btn-success btn-lg btn-block">Start</button>
       </form>
     </div>
-
+    
+    <div>
+        <canvas id="canvas"></canvas>
+    </div>
+    
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/main.js"></script>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+            background-size: 200px 300px;
+            background-position-y: -81px;
+        }
+    </style>
   </body>
 </html>

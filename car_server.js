@@ -7,7 +7,7 @@ var os = require('os');
 var ifaces = os.networkInterfaces();
 
 const testFolder = './autopilots/';
-
+const stream_image = 'img_stream.jpg';
 const IP = '0.0.0.0';
 const PORT = 8000;
 
@@ -35,8 +35,24 @@ function find_models(folder){
 }
 
 fs.watch(testFolder, function (event, filename) {
-    console.log(event);
+    console.log('event in testFolder : ', event);
     find_models(testFolder);
+});
+
+
+function send_stream(stm_image) {
+    fs.readFile(__dirname + '/' + stm_image, function(err, buf){
+        console.log(__dirname + '/' + stm_image);
+        // it's possible to embed binary data
+        // within arbitrarily-complex objects
+        io.emit('image', { image: true, buffer: buf.toString('base64') });
+        console.log('ici');
+    });
+}
+
+fs.watch(stream_image, function (event, filename) {
+    console.log('event in stream_image : ', event);
+    send_stream(stream_image);
 });
 
 io.on('connection', function(client){
