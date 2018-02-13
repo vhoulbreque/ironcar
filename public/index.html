@@ -4,14 +4,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../../../../favicon.ico">
 
     <title>IronCar Dashboard</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/open-iconic-bootstrap.min.css" rel="stylesheet">
   </head>
 
   <body id="kinput">
@@ -48,10 +46,15 @@
             </select>
         </div>
         <div class="form-group">
+          <label>Control </label>
+          <p><span id="control" class="oi oi-media-pause"></span></p>
+        </div>
+        <div class="form-group">
           <label for="inputAddress2" id="maxSpeed">Max speed limit: 50%</label>
           <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate();">
         </div>
-        <button id="starter" type="submit" class="btn btn-success btn-lg btn-block">Start</button>
+        <button id="starter" class="btn btn-success btn-lg btn-block">Start</button>
+         <button id="starter" class="btn btn-info btn-lg btn-block">Take picture</button>
       </form>
     </div>
 
