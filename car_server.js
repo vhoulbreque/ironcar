@@ -5,17 +5,19 @@ var io = require('socket.io')(server);
 var fs = require('fs');
 var os = require('os');
 var ifaces = os.networkInterfaces();
+var path = require('path');
 
 const testFolder = './autopilots/';
-const stream_image = 'img_stream.jpg';
+const stream_image = 'image_stream.jpg';
 const IP = '0.0.0.0';
 const PORT = 8000;
 
 app.use(express.static(__dirname + '/public'));
+app.use('/', express.static(path.join(__dirname, 'stream')));
 
 app.get('/', function(req, res){
     console.log("user accessed root");
-    res.sendFile(__dirname + '/public/index.html');
+    res.sendFile(__dirname + '/public/index2.html');
 });
 
 var starter = "stopped";
@@ -23,7 +25,29 @@ var currentMode = -1;
 var currentModel = -1;
 var currentStatus = -1;
 var currentMaxSpeed = 0.5;
+var all_images = [];
+var IMAGE_PLACEHOLDER = 'image_stream.jpg';
+var current_image = IMAGE_PLACEHOLDER;
 
+// Create folder ./stream
+// And deletes old images
+
+if (!fs.existsSync('./stream/')) {
+    fs.mkdirSync('./stream/');
+}
+
+fs.readdir('./stream/', (err, files) => {
+  if (err) throw err;
+
+  for (const file of files) {
+    fs.unlink(path.join('./stream/', file), err => {
+      if (err) throw err;
+      console.log('Deleting file at : ', path.join('./stream/', file));
+    });
+  }
+});
+
+// Models
 function find_models(folder){
     var autopilot_models = [];
     fs.readdirSync(folder).forEach(function(file){
@@ -40,26 +64,63 @@ fs.watch(testFolder, function (event, filename) {
 });
 
 
-function send_stream(stm_image) {
-    fs.readFile(__dirname + '/' + stm_image, function(err, buf){
-        console.log(__dirname + '/' + stm_image);
-        // it's possible to embed binary data
-        // within arbitrarily-complex objects
-        io.emit('image', { image: true, buffer: buf.toString('base64') });
-        console.log('ici');
+// Streaming
+function startStreaming(io) {
+
+  console.log('Watching for changes...');
+
+  app.set('watchingFile', true);
+
+  fs.watch('./stream/', function(current, previous) {
+    console.log('Sending image');
+
+    all_images = [];
+
+    fs.readdirSync('./stream/').forEach(function(file){
+        if (file.indexOf('~') === -1 ){
+            all_images.push(file);
+        }
     });
+
+    all_images.sort();
+
+    index = all_images.findIndex(x => x === current_image);
+
+    if (current_image == IMAGE_PLACEHOLDER) {
+        if (all_images.length != 0) {
+	    current_image = all_images[0];
+            all_images = all_images.slice(1, all_images.length);
+	}
+    } else {
+	if (index == all_images.length - 1) {
+            all_images = [];
+            current_image = current_image;  // If there is no new image, keep sending the same image
+	} else {
+	    all_images = all_images.slice(index+1, all_images.length);
+            current_image = all_images[all_images.length-1];
+	}
+    }
+
+    console.log('Sending : ', current_image);
+    io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
+   })
+
 }
 
-fs.watch(stream_image, function (event, filename) {
-    console.log('event in stream_image : ', event);
-    send_stream(stream_image);
-});
+
+function stopStreaming(io) {
+  console.log('stop streaming ________________');
+  app.set('watchingFile', false);
+}
+
 
 io.on('connection', function(client){
+
     var address = client.handshake.address;
     console.log(address + ' connected');
 
-    client.on('clientLoadedPage', function(){        
+    client.on('clientLoadedPage', function() {
+
     // Send the current state to the new clients
     if (currentMode != -1){ client.emit('mode_update', currentMode);}
     if (currentModel != -1){ client.emit('model_update', currentModel);}
@@ -94,8 +155,8 @@ io.on('connection', function(client){
         io.emit('maxSpeedUpdate', maxSpeed);
         currentMaxSpeed = maxSpeed;
     });
-    
-    
+
+
     // Commands transfer
     client.on('dir', function(data){
         io.emit('dir', data);
@@ -114,9 +175,22 @@ io.on('connection', function(client){
         }
     });
 
+    // Streaming
+    client.on('start-stream', function() {
+        startStreaming(io);
+    });
 
+    client.on('stop-stream', function() {
+	stopStreaming(io);
+    });
+
+    // Disconnect
     client.on('disconnect', function(){
+        fs.unwatchFile('./stream/');
+
         var address = client.handshake.address; 
+
+
    	console.log( address + ' disconnected');
     });
 
@@ -125,7 +199,6 @@ io.on('connection', function(client){
         console.log(message);
         io.emit('msg2user', message);
     });
-    
 
 });
 
@@ -153,7 +226,7 @@ Object.keys(ifaces).forEach(function (ifname) {
 
 
 server.listen(PORT, function(){
-  	console.log('listening on ' +  PORT);
+    console.log('listening on ' +  PORT);
 });
 
 

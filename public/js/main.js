@@ -1,5 +1,6 @@
 var socket = io.connect();
-
+var ss = require('socket.io-stream');
+var stream = ss.createStream();
 
 // -------- MODE ------
 $("[data-mode]").click(function(event) {
@@ -111,6 +112,9 @@ socket.on('msg2user', function(message){
 });
 
 var ctx = document.getElementById('canvas').getContext('2d');
+
+ss(socket).emit('streaming', stream);
+fs.createReadStream('img_stream.jpg').pipe(stream);
 
 socket.on("image", function(info) {
   if (info.image) {

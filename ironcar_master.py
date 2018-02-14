@@ -25,6 +25,7 @@ fps = 60
 cam_resolution = (250, 150)
 
 commands_json_file = "commands.json"
+save_number = 0
 
 # ***********************************************************************************
 
@@ -112,7 +113,7 @@ def training(img):
 # This function is launched on a separate thread that is supposed to run permanently
 # to get camera pics
 def camera_loop():
-    global state, mode_function, running
+    global state, mode_function, running, save_number
 
     cam = picamera.PiCamera(framerate=fps)
     cam.resolution = cam_resolution
@@ -126,7 +127,11 @@ def camera_loop():
         mode_function(img_arr)
 
         if streaming_state:
-            image_name = 'img_stream.jpg'
+            str_n = '0'*(5-len(str(save_number))) + str(save_number)
+
+            image_name = './stream/image_stream_{}.jpg'.format(str_n)
+            print('Saving image at path : ', image_name)
+            save_number += 1
             scipy.misc.imsave(image_name, img_arr)
             socketIO.emit(image_name)
 

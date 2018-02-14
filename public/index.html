@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>IronCar Dashboard</title>
-
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/open-iconic-bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
   </head>
 
   <body id="kinput">
@@ -58,20 +58,19 @@
       </form>
     </div>
     
-    <div>
-        <canvas id="canvas"></canvas>
+    <button type="button" id="" class="btn btn-info start" onclick="startStream()">Start Camera</button>
+    <button type="button" id="" class="btn btn-info stop" onclick="stopStream()">Stop Camera</button>
+    
+    <div class="row">
+        <img src="" id="stream">
     </div>
     
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/socket.io-stream.js"></script>
     <script src="js/main.js"></script>
-    <style type="text/css">
-        canvas {
-            border: 1px solid black;
-            background-size: 200px 300px;
-            background-position-y: -81px;
-        }
-    </style>
+    <script src="js/my_stream.js"></script>
+
   </body>
 </html>
