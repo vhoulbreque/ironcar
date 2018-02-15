@@ -5,3 +5,12 @@
     margin-top: 20px;
     border: 1px solid black;
 }
+
+#streaming {
+    border: 10px solid black;
+}
+
+
+.row {
+    height: 100%;
+}

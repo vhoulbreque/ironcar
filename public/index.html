@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -9,7 +8,7 @@
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/open-iconic-bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
   </head>
 
   <body id="kinput">
@@ -27,7 +26,7 @@
         Please run ironcar_master.py
       </div>
     </div>
-
+    
     <div class="container">
       <form>
         <div class="form-row">
@@ -54,17 +53,19 @@
           <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate();">
         </div>
         <button id="starter" class="btn btn-success btn-lg btn-block">Start</button>
-         <button id="starter" class="btn btn-info btn-lg btn-block">Take picture</button>
+        <button id="starter" class="btn btn-info btn-lg btn-block">Take picture</button>
       </form>
     </div>
     
-    <button type="button" id="" class="btn btn-info start" onclick="startStream()">Start Camera</button>
-    <button type="button" id="" class="btn btn-info stop" onclick="stopStream()">Stop Camera</button>
-    
-    <div class="row">
-        <img src="" id="stream">
+    <div class="container py-3" id="streaming">
+        <div class="row col-md-2 offset-md-5">
+	    <button id="camera" class="btn btn-info btn-lg">Start camera</button>
+        </div>
+        <div class="row">
+            <img src="" id="stream">
+        </div>
     </div>
-    
+
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/bootstrap.min.js"></script>

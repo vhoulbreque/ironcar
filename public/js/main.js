@@ -21,7 +21,6 @@ kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
 function handle(e) {
 
     var elem = $("#control");
-    
 
     // Gas control
     if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-bottom'); socket.emit("gas", -1);}
@@ -67,6 +66,25 @@ socket.on('starterUpdate', function(data){
         state = 'Start';
     }
     $("#starter").html(state);
+});
+
+
+// --------- START CAMERA ---------
+
+$("#camera").click(function(event) {
+    event.preventDefault();
+    console.log('toggle camera');
+    socket.emit('streamUpdate');
+    $(this).toggleClass('btn-success btn-danger');
+
+});
+
+socket.on('stream', function(data) {
+    state = "Stop camera";
+    if (data == "stopped") {
+        state = "Start camera";
+    }
+    $("#camera").html(state);
 });
 
 

@@ -28,6 +28,7 @@ var currentMaxSpeed = 0.5;
 var all_images = [];
 var IMAGE_PLACEHOLDER = 'image_stream.jpg';
 var current_image = IMAGE_PLACEHOLDER;
+var streaming = "stopped";
 
 // Create folder ./stream
 // And deletes old images
@@ -72,7 +73,8 @@ function startStreaming(io) {
   app.set('watchingFile', true);
 
   fs.watch('./stream/', function(current, previous) {
-
+    if (streaming == "started") {
+    console.log(streaming);
     all_images = [];
 
     fs.readdirSync('./stream/').forEach(function(file){
@@ -100,8 +102,14 @@ function startStreaming(io) {
 	}
     }
 
-    // console.log('Sending : ', current_image);
+    console.log('Sending : ', current_image);
     io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
+
+    } else {
+	console.log("not streaming");
+        io.sockets.emit('liveStream', IMAGE_PLACEHOLDER + '?_t=' + (Math.random() * 100000));
+    }
+
    })
 
 }
@@ -124,6 +132,7 @@ io.on('connection', function(client){
         if (currentMode != -1){ client.emit('mode_update', currentMode);}
         if (currentModel != -1){ client.emit('model_update', currentModel);}
         client.emit('starterUpdate', starter);
+        client.emit('stream', streaming);
         if (currentStatus != -1){ client.emit('msg2user', currentStatus);}
     });
 
@@ -162,6 +171,7 @@ io.on('connection', function(client){
         io.emit('dir', data);
         //console.log(data);
     });
+
     client.on('gas', function(data){
         io.emit('gas', data);
         //console.log(data);
@@ -176,19 +186,27 @@ io.on('connection', function(client){
     });
 
     // Streaming
-    client.on('start-stream', function() {
+    client.on('streamUpdate', function() {
+	if (streaming == "started") {
+            streaming = "stopped";
+        } else {
+            streaming = "started";
+        }
+        io.emit('stream', streaming);
         startStreaming(io);
     });
 
+    /*
     client.on('stop-stream', function() {
 	stopStreaming(io);
     });
+    */
 
     // Disconnect
     client.on('disconnect', function(){
         fs.unwatchFile('./stream/');
 
-        var address = client.handshake.address; 
+        var address = client.handshake.address;
 
 
    	console.log( address + ' disconnected');
