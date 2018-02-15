@@ -42,7 +42,7 @@ fs.readdir('./stream/', (err, files) => {
   for (const file of files) {
     fs.unlink(path.join('./stream/', file), err => {
       if (err) throw err;
-      console.log('Deleting file at : ', path.join('./stream/', file));
+      // console.log('Deleting file at : ', path.join('./stream/', file));
     });
   }
 });
@@ -72,7 +72,6 @@ function startStreaming(io) {
   app.set('watchingFile', true);
 
   fs.watch('./stream/', function(current, previous) {
-    console.log('Sending image');
 
     all_images = [];
 
@@ -101,7 +100,7 @@ function startStreaming(io) {
 	}
     }
 
-    console.log('Sending : ', current_image);
+    // console.log('Sending : ', current_image);
     io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
    })
 
@@ -109,7 +108,7 @@ function startStreaming(io) {
 
 
 function stopStreaming(io) {
-  console.log('stop streaming ________________');
+  console.log('Stop streaming');
   app.set('watchingFile', false);
 }
 
@@ -120,13 +119,14 @@ io.on('connection', function(client){
     console.log(address + ' connected');
 
     client.on('clientLoadedPage', function() {
-
-    // Send the current state to the new clients
-    if (currentMode != -1){ client.emit('mode_update', currentMode);}
-    if (currentModel != -1){ client.emit('model_update', currentModel);}
-    client.emit('starterUpdate', starter);
-    if (currentStatus != -1){ client.emit('msg2user', currentStatus);}
+        console.log('clientLoadedPage');
+        // Send the current state to the new clients
+        if (currentMode != -1){ client.emit('mode_update', currentMode);}
+        if (currentModel != -1){ client.emit('model_update', currentModel);}
+        client.emit('starterUpdate', starter);
+        if (currentStatus != -1){ client.emit('msg2user', currentStatus);}
     });
+
     client.emit('maxSpeedUpdate', currentMaxSpeed);
 
     //charge available models found
@@ -228,5 +228,3 @@ Object.keys(ifaces).forEach(function (ifname) {
 server.listen(PORT, function(){
     console.log('listening on ' +  PORT);
 });
-
-

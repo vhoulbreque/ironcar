@@ -1,6 +1,4 @@
 var socket = io.connect();
-var ss = require('socket.io-stream');
-var stream = ss.createStream();
 
 // -------- MODE ------
 $("[data-mode]").click(function(event) {
@@ -109,24 +107,6 @@ socket.on("model_update", function(modelSelected){
 // Message to the user
 socket.on('msg2user', function(message){
     $("#Status").text(message);
-});
-
-var ctx = document.getElementById('canvas').getContext('2d');
-
-ss(socket).emit('streaming', stream);
-fs.createReadStream('img_stream.jpg').pipe(stream);
-
-socket.on("image", function(info) {
-  if (info.image) {
-    console.log('Image recue');
-    $("#Status").text('Image recue');
-    var img = new Image();
-    img.src = 'data:image/jpeg;base64,' + info.buffer;
-    ctx.drawImage(img, 0, 0);
-  } else {
-    $("#Status").text('NO IMAGE');
-    console.log('NO IMAGE');
-  }
 });
 
 

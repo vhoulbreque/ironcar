@@ -12,8 +12,8 @@ import picamera.array
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
 
-#from keras.models import load_model
-#import tensorflow as tf
+from keras.models import load_model
+import tensorflow as tf
 import numpy as np
 import json
 
@@ -130,7 +130,7 @@ def camera_loop():
             str_n = '0'*(5-len(str(save_number))) + str(save_number)
 
             image_name = './stream/image_stream_{}.jpg'.format(str_n)
-            print('Saving image at path : ', image_name)
+            #print('Saving image at path : ', image_name)
             save_number += 1
             scipy.misc.imsave(image_name, img_arr)
             socketIO.emit(image_name)
