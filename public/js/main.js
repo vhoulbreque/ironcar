@@ -132,9 +132,8 @@ $("#take-picture").click(function(event) {
 
 socket.on('picture', function(data) {
     if (date.image) {
-        var buf = new Buffer(data.buffer, 'base64');
-        var date = new Date().toLocaleTimeString();
-        fs.writeFile('image' + date + '.jpg', buf);
+        var buf = data.buffer.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+        window.open(buf);
     }
 });
 
