@@ -1,17 +1,36 @@
 var socket = io.connect();
 
+$(document).ready( function() {
+    $('#model-group').hide();
+    $('#control-group').show();
+});
+
 // -------- MODE ------
 $("[data-mode]").click(function(event) {
-  event.preventDefault();
-  var mode = $(this).data('mode');
-  $("[data-mode]").each(function() {
+    event.preventDefault();
+    var mode = $(this).data('mode');
+    $("[data-mode]").each(function() {
     if($(this).hasClass('btn-primary'))
         $(this).toggleClass('btn-primary btn-outline-primary');
-  });
-  $("[data-mode]").removeClass('btn-primary');
-  $(this).toggleClass('btn-outline-primary btn-primary');
-  console.log(mode);
-  socket.emit("modeSwitched", mode);
+    });
+    $("[data-mode]").removeClass('btn-primary');
+    $(this).toggleClass('btn-outline-primary btn-primary');
+    console.log(mode);
+    socket.emit("modeSwitched", mode);
+
+    if (mode == 'training') {
+        $('#model-group').hide();
+        $('#control-group').show();
+    }
+    else if (mode == 'rest') {
+        $('#model-group').hide();
+        $('#control-group').hide();
+    }
+    else {
+        $('#model-group').show();
+        $('#control-group').hide();
+    }
+
 });
 
 

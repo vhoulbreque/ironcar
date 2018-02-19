@@ -56,6 +56,26 @@ streaming_state = True
 # ---------------- Different modes functions ----------------
 
 
+def predict_from_img(img):
+    """
+    Given the 250x150 image from the Pi Camera
+    Returns the direction predicted by the model
+    int : index_class 
+    0 = turn full left
+    2 = go
+    4 = turn full right
+    """
+
+    img = np.array([img[80:, :, :]])
+    
+    with graph.as_default():
+        pred = model.predict(img)
+        print('pred : ', pred)
+        prediction = list(pred[0])
+    index_class = prediction.index(max(prediction))
+
+    return index_class
+
 def get_gas_from_dir(dir):
     return 0.2
 
@@ -64,15 +84,8 @@ def default_call(img):
     pass
 
 
-def autopilot(img):
+def autopilot(img, index_class):
     global model, graph, state, max_speed_rate
-
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
-    index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
     local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
@@ -84,22 +97,15 @@ def autopilot(img):
         pwm.set_pwm(commands['gas'], 0, commands['neutral'])
 
 
-def dirauto(img):
+def dirauto(img, index_class):
     global model, graph
-
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
-    index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
     pwm.set_pwm(commands['direction'], 0,
                 int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
-def training(img):
+def training(img, index_class):
     global n_img, curr_dir, curr_gas
     image_name = os.path.join(save_folder, 'frame_' + str(n_img) + '_gas_' +
                               str(curr_gas) + '_dir_' + str(curr_dir) +
@@ -124,12 +130,14 @@ def camera_loop():
         img_arr = f.array
         if not running:
             break
-        mode_function(img_arr)
+        
+        index_class = predict_from_img(img)
+        mode_function(img_arr, index_class)
 
         if streaming_state:
             str_n = '0'*(5-len(str(save_number))) + str(save_number)
 
-            image_name = './stream/image_stream_{}.jpg'.format(str_n)
+            image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
             #print('Saving image at path : ', image_name)
             save_number += 1
             scipy.misc.imsave(image_name, img_arr)
