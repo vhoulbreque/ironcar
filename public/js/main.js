@@ -21,15 +21,21 @@ $("[data-mode]").click(function(event) {
     if (mode == 'training') {
         $('#model-group').hide();
         $('#control-group').show();
+        $('#starter').prop("disabled",false);
     }
     else if (mode == 'rest') {
         $('#model-group').hide();
         $('#control-group').hide();
+        $('#starter').prop("disabled",false);
     }
     else {
         $('#model-group').show();
         $('#control-group').hide();
+        // TODO disable if model loaded
+        $('#starter').prop("disabled",false);
     }
+
+    
 
 });
 
@@ -77,6 +83,13 @@ $("#starter").click(function( event ) {
   console.log('starter');
   socket.emit('starter');
   $(this).toggleClass('btn-success btn-danger');
+
+  if ($(this).hasClass('btn-danger')) {
+    $('[data-mode').prop("disabled",true);
+  }
+  else {
+    $('[data-mode').prop("disabled",false);
+  }
 });
 
 socket.on('starterUpdate', function(data){
