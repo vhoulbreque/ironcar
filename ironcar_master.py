@@ -66,13 +66,18 @@ def predict_from_img(img):
     4 = turn full right
     """
 
-    img = np.array([img[80:, :, :]])
-    
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
+    global graph, model
+
+    try:
+        img = np.array([img[80:, :, :]])
+
+        with graph.as_default():
+            pred = model.predict(img)
+            print('pred : ', pred)
         prediction = list(pred[0])
-    index_class = prediction.index(max(prediction))
+        index_class = prediction.index(max(prediction))
+    except:
+        index_class = 2
 
     return index_class
 
@@ -80,7 +85,7 @@ def get_gas_from_dir(dir):
     return 0.2
 
 
-def default_call(img):
+def default_call(img, index_class):
     pass
 
 
@@ -130,8 +135,8 @@ def camera_loop():
         img_arr = f.array
         if not running:
             break
-        
-        index_class = predict_from_img(img)
+
+        index_class = predict_from_img(img_arr)
         mode_function(img_arr, index_class)
 
         if streaming_state:
@@ -251,7 +256,6 @@ socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
 #socketIO = socket.socket()
 #socketIO.bind(('0.0.0.0', 8000))
 #socketIO.bind(('127.0.0.1', 8000))
-
 
 socketIO.emit('msg2user', 'Starting Camera thread')
 camera_thread = Thread(target=camera_loop, args=())
