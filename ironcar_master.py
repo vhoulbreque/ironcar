@@ -12,8 +12,8 @@ import picamera.array
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
 
-#from keras.models import load_model
-#import tensorflow as tf
+from keras.models import load_model
+import tensorflow as tf
 import numpy as np
 import json
 
@@ -25,6 +25,7 @@ fps = 60
 cam_resolution = (250, 150)
 
 commands_json_file = "commands.json"
+save_number = 0
 
 # ***********************************************************************************
 
@@ -55,22 +56,41 @@ streaming_state = True
 # ---------------- Different modes functions ----------------
 
 
+def predict_from_img(img):
+    """
+    Given the 250x150 image from the Pi Camera
+    Returns the direction predicted by the model
+    int : index_class 
+    0 = turn full left
+    2 = go
+    4 = turn full right
+    """
+
+    global graph, model
+
+    try:
+        img = np.array([img[80:, :, :]])
+
+        with graph.as_default():
+            pred = model.predict(img)
+            print('pred : ', pred)
+        prediction = list(pred[0])
+    except:
+        prediction = [0, 0, 1, 0, 0]
+
+    return prediction
+
 def get_gas_from_dir(dir):
     return 0.2
 
 
-def default_call(img):
+def default_call(img, prediction):
     pass
 
 
-def autopilot(img):
+def autopilot(img, prediction):
     global model, graph, state, max_speed_rate
 
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
@@ -83,14 +103,9 @@ def autopilot(img):
         pwm.set_pwm(commands['gas'], 0, commands['neutral'])
 
 
-def dirauto(img):
+def dirauto(img, prediction):
     global model, graph
 
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
@@ -98,7 +113,7 @@ def dirauto(img):
                 int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
-def training(img):
+def training(img, prediction):
     global n_img, curr_dir, curr_gas
     image_name = os.path.join(save_folder, 'frame_' + str(n_img) + '_gas_' +
                               str(curr_gas) + '_dir_' + str(curr_dir) +
@@ -112,7 +127,7 @@ def training(img):
 # This function is launched on a separate thread that is supposed to run permanently
 # to get camera pics
 def camera_loop():
-    global state, mode_function, running
+    global state, mode_function, running, save_number
 
     cam = picamera.PiCamera(framerate=fps)
     cam.resolution = cam_resolution
@@ -123,10 +138,17 @@ def camera_loop():
         img_arr = f.array
         if not running:
             break
-        mode_function(img_arr)
 
+        prediction = predict_from_img(img_arr)
+        mode_function(img_arr, prediction)
+
+        
         if streaming_state:
-            image_name = 'img_stream.jpg'
+            str_n = '0'*(5-len(str(save_number))) + str(save_number)
+            index_class = prediction.index(max(prediction))
+            image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
+            #print('Saving image at path : ', image_name)
+            save_number += 1
             scipy.misc.imsave(image_name, img_arr)
             socketIO.emit(image_name)
 
@@ -238,7 +260,6 @@ socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
 #socketIO = socket.socket()
 #socketIO.bind(('0.0.0.0', 8000))
 #socketIO.bind(('127.0.0.1', 8000))
-
 
 socketIO.emit('msg2user', 'Starting Camera thread')
 camera_thread = Thread(target=camera_loop, args=())

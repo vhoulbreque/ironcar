@@ -1,18 +1,36 @@
 var socket = io.connect();
 
+$(document).ready( function() {
+    $('#model-group').hide();
+    $('#control-group').show();
+});
 
 // -------- MODE ------
 $("[data-mode]").click(function(event) {
-  event.preventDefault();
-  var mode = $(this).data('mode');
-  $("[data-mode]").each(function() {
+    event.preventDefault();
+    var mode = $(this).data('mode');
+    $("[data-mode]").each(function() {
     if($(this).hasClass('btn-primary'))
         $(this).toggleClass('btn-primary btn-outline-primary');
-  });
-  $("[data-mode]").removeClass('btn-primary');
-  $(this).toggleClass('btn-outline-primary btn-primary');
-  console.log(mode);
-  socket.emit("modeSwitched", mode);
+    });
+    $("[data-mode]").removeClass('btn-primary');
+    $(this).toggleClass('btn-outline-primary btn-primary');
+    console.log(mode);
+    socket.emit("modeSwitched", mode);
+
+    if (mode == 'training') {
+        $('#model-group').hide();
+        $('#control-group').show();
+    }
+    else if (mode == 'rest') {
+        $('#model-group').hide();
+        $('#control-group').hide();
+    }
+    else {
+        $('#model-group').show();
+        $('#control-group').hide();
+    }
+
 });
 
 
@@ -22,7 +40,6 @@ kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
 function handle(e) {
 
     var elem = $("#control");
-    
 
     // Gas control
     if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-bottom'); socket.emit("gas", -1);}
@@ -71,10 +88,28 @@ socket.on('starterUpdate', function(data){
 });
 
 
+// --------- START CAMERA ---------
+
+$("#camera").click(function(event) {
+    event.preventDefault();
+    console.log('toggle camera');
+    socket.emit('streamUpdate');
+    $(this).toggleClass('btn-success btn-danger');
+
+});
+
+socket.on('stream', function(data) {
+    state = "Stop camera";
+    if (data == "stopped") {
+        state = "Start camera";
+    }
+    $("#camera").html(state);
+});
+
+
 // -------- AUTOPILOT MODEL -----------
 
 socket.on('new_available_model', function(modelList){
-    console.log(modelList);
     var mySelect = $("#model_select");
     var options_html = "<option selected>Choose model...</option>";
     for (var i = 0; i < modelList.length; i++) {
@@ -108,21 +143,6 @@ socket.on("model_update", function(modelSelected){
 // Message to the user
 socket.on('msg2user', function(message){
     $("#Status").text(message);
-});
-
-var ctx = document.getElementById('canvas').getContext('2d');
-
-socket.on("image", function(info) {
-  if (info.image) {
-    console.log('Image recue');
-    $("#Status").text('Image recue');
-    var img = new Image();
-    img.src = 'data:image/jpeg;base64,' + info.buffer;
-    ctx.drawImage(img, 0, 0);
-  } else {
-    $("#Status").text('NO IMAGE');
-    console.log('NO IMAGE');
-  }
 });
 
 
