@@ -104,16 +104,20 @@ socket.on('starterUpdate', function(data){
 $("#camera").click(function(event) {
     event.preventDefault();
     socket.emit('streamUpdate');
-    $(this).toggleClass('btn-success btn-danger');
-    // TODO might be better to handle this in the callback bellow as far the start button
-    $('#dirline').attr('visibility', 'visible');
 });
 
 socket.on('stream', function(data) {
     state = "Stop camera";
-    if (data == "stopped") {
+
+    if (data == "stopped"){
         state = "Start camera";
-    } 
+        $("#starter").removeClass('btn-danger').addClass('btn-info');
+        $('#dirline').attr('visibility', 'hidden');
+    } else {
+        $("#starter").removeClass('btn-info').addClass('btn-danger');
+        $('#dirline').attr('visibility', 'visible');
+    }
+
     $("#camera").html(state);
 });
 
