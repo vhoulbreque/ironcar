@@ -82,6 +82,15 @@ function delete_files(folder, files_to_delete) {
 }
 
 
+function send_picture() {
+
+  fs.readFile('./stream/' + current_image, function(err, buf){
+    socket.emit('picture', { image: true, buffer: buf.toString('base64') });
+    console.log('PHOTOGRAPHY the picture : ', current_image);
+  });
+
+}
+
 // Streaming
 function startStreaming(io) {
 
@@ -223,6 +232,10 @@ io.on('connection', function(client){
 	stopStreaming(io);
     });
     */
+
+    client.on('takePicture', function() {
+        send_picture();
+    }
 
     // Disconnect
     client.on('disconnect', function(){
