@@ -142,7 +142,6 @@ def camera_loop():
         prediction = predict_from_img(img_arr)
         mode_function(img_arr, prediction)
 
-        
         if streaming_state:
             str_n = '0'*(5-len(str(save_number))) + str(save_number)
             index_class = prediction.index(max(prediction))
@@ -239,7 +238,7 @@ def on_gas(data):
     else:
         #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
         pwm.set_pwm(commands['gas'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
-    
+
 
 def on_max_speed_update(new_max_speed):
     global max_speed_rate
