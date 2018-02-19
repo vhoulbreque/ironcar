@@ -34,9 +34,6 @@ $("[data-mode]").click(function(event) {
         // TODO disable if model loaded
         $('#starter').prop("disabled",false);
     }
-
-    
-
 });
 
 
@@ -105,7 +102,6 @@ $("#camera").click(function(event) {
     event.preventDefault();
     socket.emit('streamUpdate');
     // TODO might be better to handle this in the callback bellow as far the start button
-    
 });
 
 socket.on('stream', function(data) {
@@ -131,9 +127,20 @@ $("#take-picture").click(function(event) {
 });
 
 socket.on('picture', function(data) {
-    if (date.image) {
-        var buf = data.buffer.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
-        window.open(buf);
+    console.log('PICTURE RECEIVED');
+    if (data.image) {
+
+        // Simulate clicking to download
+        var a = $('<a>',{
+            text: 'text',
+            title: 'title',
+            href: 'data:image/jpeg;base64,' + data.buffer,
+            download: 'filename.jpg'
+        }).appendTo('body').click()
+
+        a[0].click();
+        a.remove();
+
     }
 });
 

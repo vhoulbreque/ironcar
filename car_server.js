@@ -84,11 +84,23 @@ function delete_files(folder, files_to_delete) {
 
 function send_picture() {
 
-  fs.readFile('./stream/' + current_image, function(err, buf){
-    socket.emit('picture', { image: true, buffer: buf.toString('base64') });
-    console.log('PHOTOGRAPHY the picture : ', current_image);
+  fs.readdirSync('./stream/').forEach(function(file){
+    if (file.indexOf('~') === -1) {
+      all_images.push(file);
+    }
   });
 
+  all_images.sort();
+
+  if (all_images.length != 0) {
+    current_image = all_images[all_images.length - 1];
+
+    fs.readFile('./stream/' + current_image, function(err, buf){
+      if(err) throw err;
+      io.emit('picture', { image: true, buffer: buf.toString('base64') });
+      console.log('PHOTOGRAPHY the picture : ', current_image);
+    });
+  }
 }
 
 // Streaming
@@ -100,19 +112,19 @@ function startStreaming(io) {
 
     fs.watch('./stream/', function(current, previous) {
 
+        all_images = [];
+
+        fs.readdirSync('./stream/').forEach(function(file){
+            if (file.indexOf('~') === -1) {
+                all_images.push(file);
+            }
+        });
+
+        all_images.sort();
+        index = all_images.findIndex(x => x === current_image);
+
         if (streaming == "started") {
             console.log(streaming);
-            all_images = [];
-
-            fs.readdirSync('./stream/').forEach(function(file){
-                if (file.indexOf('~') === -1) {
-                    all_images.push(file);
-                }
-            });
-
-            all_images.sort();
-
-            index = all_images.findIndex(x => x === current_image);
 
             if (current_image == IMAGE_PLACEHOLDER) {
                 if (all_images.length != 0) {
@@ -137,6 +149,10 @@ function startStreaming(io) {
             io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
         }
         else {
+            if (all_images.length != 0) {
+                 current_image = all_images[all_images.length-1];
+            }
+
             console.log("not streaming");
             io.sockets.emit('liveStream', IMAGE_PLACEHOLDER + '?_t=' + (Math.random() * 100000));
         }
