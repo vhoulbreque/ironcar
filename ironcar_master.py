@@ -142,9 +142,10 @@ def camera_loop():
         prediction = predict_from_img(img_arr)
         mode_function(img_arr, prediction)
 
+        
         if streaming_state:
             str_n = '0'*(5-len(str(save_number))) + str(save_number)
-
+            index_class = prediction.index(max(prediction))
             image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
             #print('Saving image at path : ', image_name)
             save_number += 1
