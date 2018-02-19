@@ -103,7 +103,6 @@ socket.on('starterUpdate', function(data){
 
 $("#camera").click(function(event) {
     event.preventDefault();
-    console.log('toggle camera');
     socket.emit('streamUpdate');
     $(this).toggleClass('btn-success btn-danger');
     // TODO might be better to handle this in the callback bellow as far the start button
@@ -118,6 +117,20 @@ socket.on('stream', function(data) {
     $("#camera").html(state);
 });
 
+// --------- TAKE PICTURE ---------
+
+$("#take-picture").click(function(event) {
+    event.preventDefault();
+    socket.emit('takePicture');
+});
+
+socket.on('picture', function(data) {
+    if (date.image) {
+        var buf = new Buffer(data.buffer, 'base64');
+        var date = new Date().toLocaleTimeString();
+        fs.writeFile('image' + date + '.jpg', buf);
+    }
+});
 
 // -------- AUTOPILOT MODEL -----------
 
