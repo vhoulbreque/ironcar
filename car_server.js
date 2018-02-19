@@ -68,49 +68,51 @@ fs.watch(testFolder, function (event, filename) {
 // Streaming
 function startStreaming(io) {
 
-  console.log('Watching for changes...');
+    console.log('Watching for changes...');
 
-  app.set('watchingFile', true);
+    app.set('watchingFile', true);
 
-  fs.watch('./stream/', function(current, previous) {
-    if (streaming == "started") {
-    console.log(streaming);
-    all_images = [];
+    fs.watch('./stream/', function(current, previous) {
+    
+        if (streaming == "started") {
+            console.log(streaming);
+            all_images = [];
 
-    fs.readdirSync('./stream/').forEach(function(file){
-        if (file.indexOf('~') === -1 ){
-            all_images.push(file);
+            fs.readdirSync('./stream/').forEach(function(file){
+                if (file.indexOf('~') === -1 ){
+                    all_images.push(file);
+                }
+            });
+
+            all_images.sort();
+
+            index = all_images.findIndex(x => x === current_image);
+
+            if (current_image == IMAGE_PLACEHOLDER) {
+                if (all_images.length != 0) {
+                    current_image = all_images[0];
+                    all_images = all_images.slice(1, all_images.length);
+                }
+            }
+            else {
+                if (index == all_images.length - 1) {
+                    all_images = [];
+                    current_image = current_image;  // If there is no new image, keep sending the same image
+                }
+                else {
+                    all_images = all_images.slice(index+1, all_images.length);
+                    current_image = all_images[all_images.length-1];
+                }
+            }
+
+            console.log('Sending : ', current_image);
+            io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
+        }
+        else {
+            console.log("not streaming");
+            io.sockets.emit('liveStream', IMAGE_PLACEHOLDER + '?_t=' + (Math.random() * 100000));
         }
     });
-
-    all_images.sort();
-
-    index = all_images.findIndex(x => x === current_image);
-
-    if (current_image == IMAGE_PLACEHOLDER) {
-        if (all_images.length != 0) {
-	    current_image = all_images[0];
-            all_images = all_images.slice(1, all_images.length);
-	}
-    } else {
-	if (index == all_images.length - 1) {
-            all_images = [];
-            current_image = current_image;  // If there is no new image, keep sending the same image
-	} else {
-	    all_images = all_images.slice(index+1, all_images.length);
-            current_image = all_images[all_images.length-1];
-	}
-    }
-
-    console.log('Sending : ', current_image);
-    io.sockets.emit('liveStream', current_image + '?_t=' + (Math.random() * 100000));
-
-    } else {
-	console.log("not streaming");
-        io.sockets.emit('liveStream', IMAGE_PLACEHOLDER + '?_t=' + (Math.random() * 100000));
-    }
-
-   })
 
 }
 

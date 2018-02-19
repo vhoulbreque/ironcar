@@ -91,7 +91,6 @@ socket.on('stream', function(data) {
 // -------- AUTOPILOT MODEL -----------
 
 socket.on('new_available_model', function(modelList){
-    console.log(modelList);
     var mySelect = $("#model_select");
     var options_html = "<option selected>Choose model...</option>";
     for (var i = 0; i < modelList.length; i++) {

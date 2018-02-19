@@ -3,8 +3,12 @@ socket = io();
 
 $('.stop').hide();
 
-socket.on('liveStream', function(url) {
-    $('#stream').attr('src', url);
+socket.on('liveStream', function(url_string) {
+    $('#stream_image').attr('xlink:href', url_string);
+    
+    //TODO find acc and angle in image name
+    var steering = 0;
+    $('#dirline').attr('x2', steering);
     $('.start').hide();
     $('.stop').show();
 });
