@@ -92,7 +92,7 @@ socket.on('starterUpdate', function(data){
         $('[data-mode').prop("disabled",false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
     } else {
-        $('[data-mode').prop("disabled",false);
+        $('[data-mode').prop("disabled",true);
         $("#starter").removeClass('btn-success').addClass('btn-danger');
     }
 
