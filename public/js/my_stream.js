@@ -11,9 +11,13 @@ socket.on('liveStream', function(url_string) {
     var steering = parseInt(param_arr[param_arr.length-2].split('.')[0]);
 
     // TODO verify if correct. Here we assert many things
-    var steer_to_arrow = ['35','80','125','150','175'];
-
-    $('#dirline').attr('x2', steer_to_arrow[steering]);
+    var steer_to_arrow = ['35','80','-1','150','175'];
+    if (steer_to_arrow == '-1') {
+    	$('#dirline').attr('visibility', 'hidden');
+    } else {
+    	$('#dirline').attr('visibility', 'visible');
+	    $('#dirline').attr('x2', steer_to_arrow[steering]);
+    }
     $('.start').hide();
     $('.stop').show();
 });

@@ -85,7 +85,6 @@ $("#starter").click(function( event ) {
 });
 
 socket.on('starterUpdate', function(data){
-    console.log('ici');
     var state = 'Stop';
     if (data == "stopped"){
         state = 'Start';
@@ -107,14 +106,15 @@ $("#camera").click(function(event) {
     console.log('toggle camera');
     socket.emit('streamUpdate');
     $(this).toggleClass('btn-success btn-danger');
-
+    // TODO might be better to handle this in the callback bellow as far the start button
+    $('#dirline').attr('visibility', 'visible');
 });
 
 socket.on('stream', function(data) {
     state = "Stop camera";
     if (data == "stopped") {
         state = "Start camera";
-    }
+    } 
     $("#camera").html(state);
 });
 
