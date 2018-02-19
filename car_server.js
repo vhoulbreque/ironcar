@@ -48,6 +48,7 @@ fs.readdir('./stream/', (err, files) => {
   }
 });
 
+
 // Models
 function find_models(folder){
     var autopilot_models = [];
@@ -65,6 +66,22 @@ fs.watch(testFolder, function (event, filename) {
 });
 
 
+function delete_files(folder, files_to_delete) {
+
+  fs.readdir(folder, (err, files) => {
+    if (err) throw err;
+    for (const file of files) {
+      if (files_to_delete == null || files_to_delete.indexOf(file) >= 0) {
+        fs.unlink(path.join(folder, file), err => {
+          if (err) console.log(err);
+          console.log('Deleting file at : ', path.join(folder, file));
+        });
+      }
+    }
+  });
+}
+
+
 // Streaming
 function startStreaming(io) {
 
@@ -73,13 +90,13 @@ function startStreaming(io) {
     app.set('watchingFile', true);
 
     fs.watch('./stream/', function(current, previous) {
-    
+
         if (streaming == "started") {
             console.log(streaming);
             all_images = [];
 
             fs.readdirSync('./stream/').forEach(function(file){
-                if (file.indexOf('~') === -1 ){
+                if (file.indexOf('~') === -1) {
                     all_images.push(file);
                 }
             });
@@ -100,8 +117,10 @@ function startStreaming(io) {
                     current_image = current_image;  // If there is no new image, keep sending the same image
                 }
                 else {
+                    to_delete_images = all_images.slice(0, index+1);
                     all_images = all_images.slice(index+1, all_images.length);
                     current_image = all_images[all_images.length-1];
+                    delete_files('./stream/', to_delete_images);
                 }
             }
 
@@ -129,6 +148,7 @@ io.on('connection', function(client){
     console.log(address + ' connected');
 
     client.on('clientLoadedPage', function() {
+        //delete_files('./stream/', null);
         console.log('clientLoadedPage');
         // Send the current state to the new clients
         if (currentMode != -1){ client.emit('mode_update', currentMode);}
@@ -248,3 +268,4 @@ Object.keys(ifaces).forEach(function (ifname) {
 server.listen(PORT, function(){
     console.log('listening on ' +  PORT);
 });
+

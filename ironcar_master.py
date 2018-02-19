@@ -12,8 +12,8 @@ import picamera.array
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
 
-from keras.models import load_model
-import tensorflow as tf
+#from keras.models import load_model
+#import tensorflow as tf
 import numpy as np
 import json
 
