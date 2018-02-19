@@ -82,21 +82,20 @@ $("#starter").click(function( event ) {
   event.preventDefault();
   console.log('starter');
   socket.emit('starter');
-  $(this).toggleClass('btn-success btn-danger');
-
-  if ($(this).hasClass('btn-danger')) {
-    $('[data-mode').prop("disabled",true);
-  }
-  else {
-    $('[data-mode').prop("disabled",false);
-  }
 });
 
 socket.on('starterUpdate', function(data){
+    console.log('ici');
     var state = 'Stop';
     if (data == "stopped"){
         state = 'Start';
+        $('[data-mode').prop("disabled",false);
+        $("#starter").removeClass('btn-danger').addClass('btn-success');
+    } else {
+        $('[data-mode').prop("disabled",false);
+        $("#starter").removeClass('btn-success').addClass('btn-danger');
     }
+
     $("#starter").html(state);
 });
 
