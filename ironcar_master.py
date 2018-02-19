@@ -75,22 +75,23 @@ def predict_from_img(img):
             pred = model.predict(img)
             print('pred : ', pred)
         prediction = list(pred[0])
-        index_class = prediction.index(max(prediction))
     except:
-        index_class = 2
+        prediction = [0, 0, 1, 0, 0]
 
-    return index_class
+    return prediction
 
 def get_gas_from_dir(dir):
     return 0.2
 
 
-def default_call(img, index_class):
+def default_call(img, prediction):
     pass
 
 
-def autopilot(img, index_class):
+def autopilot(img, prediction):
     global model, graph, state, max_speed_rate
+
+    index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
     local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
@@ -102,15 +103,17 @@ def autopilot(img, index_class):
         pwm.set_pwm(commands['gas'], 0, commands['neutral'])
 
 
-def dirauto(img, index_class):
+def dirauto(img, prediction):
     global model, graph
+
+    index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
     pwm.set_pwm(commands['direction'], 0,
                 int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
-def training(img, index_class):
+def training(img, prediction):
     global n_img, curr_dir, curr_gas
     image_name = os.path.join(save_folder, 'frame_' + str(n_img) + '_gas_' +
                               str(curr_gas) + '_dir_' + str(curr_dir) +
@@ -136,8 +139,8 @@ def camera_loop():
         if not running:
             break
 
-        index_class = predict_from_img(img_arr)
-        mode_function(img_arr, index_class)
+        prediction = predict_from_img(img_arr)
+        mode_function(img_arr, prediction)
 
         if streaming_state:
             str_n = '0'*(5-len(str(save_number))) + str(save_number)
