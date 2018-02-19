@@ -235,7 +235,7 @@ io.on('connection', function(client){
 
     client.on('takePicture', function() {
         send_picture();
-    }
+    });
 
     // Disconnect
     client.on('disconnect', function(){
