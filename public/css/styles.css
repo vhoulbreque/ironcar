@@ -1,16 +1,3 @@
 #stream {
-    height: 99%;
-    margin: 0px auto;
-    display: block;
-    margin-top: 20px;
-    border: 1px solid black;
-}
-
-#streaming {
-    border: 10px solid black;
-}
-
-
-.row {
-    height: 100%;
+	width: 100%;
 }
