@@ -1,4 +1,5 @@
 from socketIO_client import SocketIO
+import socket
 from threading import Thread
 
 import sys, os, time
@@ -11,8 +12,8 @@ import picamera.array
 from Adafruit_BNO055 import BNO055
 import Adafruit_PCA9685
 
-from keras.models import load_model
-import tensorflow as tf
+#from keras.models import load_model
+#import tensorflow as tf
 import numpy as np
 import json
 
@@ -23,7 +24,8 @@ fps = 60
 
 cam_resolution = (250, 150)
 
-commands_json_file = "commands.json"
+commands_json_file = 'commands.json'
+save_number = 0
 
 # ***********************************************************************************
 
@@ -48,55 +50,67 @@ curr_dir, curr_gas = 0, 0
 current_model = None
 max_speed_rate = 0.5
 model_loaded = False
+streaming_state = True
 
 
 # ---------------- Different modes functions ----------------
 
 
+def predict_from_img(img):
+    """
+    Given the 250x150 image from the Pi Camera
+    Returns the direction predicted by the model
+    array[5] : prediction
+    """
+
+    global graph, model
+
+    try:
+        img = np.array([img[80:, :, :]])
+
+        with graph.as_default():
+            pred = model.predict(img)
+            print('pred : ', pred)
+        prediction = list(pred[0])
+    except:
+        prediction = [0, 0, 1, 0, 0]
+
+    return prediction
+
 def get_gas_from_dir(dir):
     return 0.2
 
 
-def default_call(img):
+def default_call(img, prediction):
     pass
 
 
-def autopilot(img):
+def autopilot(img, prediction):
     global model, graph, state, max_speed_rate
 
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
     local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
 
-    pwm.set_pwm(commands['direction'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+    pwm.set_pwm(commands['direction_pin'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
     if state == "started":
-        pwm.set_pwm(commands['gas'], 0, int(local_gas * (commands['drive_max'] - commands['drive']) + commands['drive']))
+        pwm.set_pwm(commands['gas_pin'], 0, int(local_gas * (commands['drive_max'] - commands['drive']) + commands['drive']))
     else:
-        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['neutral'])
 
 
-def dirauto(img):
+def dirauto(img, prediction):
     global model, graph
 
-    img = np.array([img[80:, :, :]])
-    with graph.as_default():
-        pred = model.predict(img)
-        print('pred : ', pred)
-        prediction = list(pred[0])
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
-    pwm.set_pwm(commands['direction'], 0,
+    pwm.set_pwm(commands['direction_pin'], 0,
                 int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
-def training(img):
+def training(img, prediction):
     global n_img, curr_dir, curr_gas
     image_name = os.path.join(save_folder, 'frame_' + str(n_img) + '_gas_' +
                               str(curr_gas) + '_dir_' + str(curr_dir) +
@@ -110,18 +124,29 @@ def training(img):
 # This function is launched on a separate thread that is supposed to run permanently
 # to get camera pics
 def camera_loop():
-    global state, mode_function, running
+    global state, mode_function, running, save_number
 
     cam = picamera.PiCamera(framerate=fps)
     cam.resolution = cam_resolution
     cam_output = picamera.array.PiRGBArray(cam, size=cam_resolution)
     stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
-    
+
     for f in stream:
         img_arr = f.array
         if not running:
             break
-        mode_function(img_arr)
+
+        prediction = predict_from_img(img_arr)
+        mode_function(img_arr, prediction)
+
+        if streaming_state:
+            str_n = '0'*(5-len(str(save_number))) + str(save_number)
+            index_class = prediction.index(max(prediction))
+            image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
+            #print('Saving image at path : ', image_name)
+            save_number += 1
+            scipy.misc.imsave(image_name, img_arr)
+            socketIO.emit(image_name)
 
         cam_output.truncate(0)
 
@@ -151,7 +176,7 @@ def on_switch_mode(data):
         state = "stopped"
         socketIO.emit('starter')
     # Stop the gas before switching mode
-    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+    pwm.set_pwm(commands['gas_pin'], 0 , commands['neutral'])
     mode = data
     if data == "dirauto":
         socketIO.off('dir')
@@ -180,7 +205,7 @@ def on_switch_mode(data):
         socketIO.emit('msg2user', ' Resting')
     print('switched to mode : ', data)
     # Make sure we stop even if the previous mode sent a last command before switching.
-    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+    pwm.set_pwm(commands['gas_pin'], 0 , commands['neutral'])
 
 
 def on_start(data):
@@ -194,31 +219,44 @@ def on_dir(data):
     curr_dir = commands['invert_dir'] * float(data)
     if curr_dir == 0:
         #print(commands['straight'])
-        pwm.set_pwm(commands['direction'], 0 , commands['straight'])
+        pwm.set_pwm(commands['direction_pin'], 0 , commands['straight'])
     else:
         #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
-        pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+        pwm.set_pwm(commands['direction_pin'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
 
 def on_gas(data):
     global curr_gas, max_speed_rate
     curr_gas = float(data) * max_speed_rate
     if curr_gas < 0:
-        pwm.set_pwm(commands['gas'], 0, commands['stop'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['stop'])
     elif curr_gas == 0:
-        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['neutral'])
     else:
         #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
-        pwm.set_pwm(commands['gas'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
-    
+        pwm.set_pwm(commands['gas_pin'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+
 
 def on_max_speed_update(new_max_speed):
     global max_speed_rate
     max_speed_rate = new_max_speed
 
+
+def on_streaming_update(new_streaming_state):
+    global streaming_state
+    streaming_state = new_streaming_state
+
+
 # --------------- Starting server and threads ----------------
+print('#' * 50)
+print('Starting the sockets')
+
 mode_function = default_call
 socketIO = SocketIO('http://localhost', port=8000, wait_for_connection=False)
+#socketIO = socket.socket()
+#socketIO.bind(('0.0.0.0', 8000))
+#socketIO.bind(('127.0.0.1', 8000))
+
 socketIO.emit('msg2user', 'Starting Camera thread')
 camera_thread = Thread(target=camera_loop, args=())
 camera_thread.start()
@@ -229,6 +267,7 @@ socketIO.on('starterUpdate', on_start)
 socketIO.on('maxSpeedUpdate', on_max_speed_update)
 socketIO.on('gas', on_gas)
 socketIO.on('dir', on_dir)
+socketIO.on('streaming_update', on_streaming_update)
 
 try:
     socketIO.wait()

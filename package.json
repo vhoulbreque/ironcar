@@ -4,7 +4,7 @@
   "description": "## SETUP",
   "main": "car_server.js",
   "dependencies": {
-    "express": "^4.15.3",
+    "express": "^4.16.2",
     "fs": "0.0.1-security",
     "socket.io": "^1.7.4"
   },

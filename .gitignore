@@ -6,6 +6,12 @@ __pycache__/*
 
 
 # Node
-
 node_modules/*
 *lock.json
+
+# Javascript
+*.swp
+
+# Generation
+stream/*
+datasets/*
