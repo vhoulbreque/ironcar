@@ -24,7 +24,7 @@ fps = 60
 
 cam_resolution = (250, 150)
 
-commands_json_file = "commands.json"
+commands_json_file = 'commands.json'
 save_number = 0
 
 # ***********************************************************************************
@@ -60,10 +60,7 @@ def predict_from_img(img):
     """
     Given the 250x150 image from the Pi Camera
     Returns the direction predicted by the model
-    int : index_class 
-    0 = turn full left
-    2 = go
-    4 = turn full right
+    array[5] : prediction
     """
 
     global graph, model

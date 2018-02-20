@@ -16,7 +16,7 @@
     <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
       <h5 class="my-0 mr-md-auto font-weight-normal">IronCar Dashboard 🏎️</h5>
       <nav class="my-2 my-md-0 mr-md-3">
-        <a class="p-2 text-dark" href="#">Main</a>        
+        <a class="p-2 text-dark" href="/">Main</a>        
         <a class="p-2 text-dark" href="/commands.html">Commands</a>
       </nav>
     </div>
@@ -28,13 +28,25 @@
       </div>
     </div>
     
-    <div class="container">
+    <div class="container-fluid">
 		<div class="row">
-	 		<div class="col-lg-3 mb-3">
-	 			Coucou
+	 		<div class="col-lg-4 mb-3">
+	 			<h5>Pins</h5>
+	 			<p>You use the <code>direction_pin</code> and <code>gas_pin</code> to set the pin number on the Pi Hat.</p>
+
+	 			<h5>Steering</h5>
+	 			<p><code>left</code>, <code>straight</code> and <code>right</code> parameters are used to send the direction order. You need to tune those values so that the Raspi sends the right PWM commands to the RC Car.</p>
+
+	 			<h5>Gas</h5>
+	 			<p><code>stop</code>, <code>neutral</code> and <code>drive</code></p>
+	 			<p><code>drive_max</code> is the maximum amount of gas.</p>
+	 			<p>The <code>rev_</code> parameters defines the same commands but for reverse.</p>
+
+	 			<h5>t</h5>
+	 			<p><code>go_t</code>, <code>stop_t</code>, <code>left_t</code>, <code>right_t</code>, <code>invert_dir</code><p>
 	 		</div>
-	 		<div class="col-lg-9 mb-3">
-	 			Coucou
+	 		<div class="col-lg-8 mb-3">
+	 			TODO
 	 		</div>
 		</div>
     </div>
