@@ -15,10 +15,6 @@ const PORT = 8000;
 app.use(express.static(__dirname + '/public'));
 app.use('/', express.static(path.join(__dirname, 'stream')));
 
-app.get('/', function(req, res){
-    console.log("user accessed root");
-    res.sendFile(__dirname + '/public/index2.html');
-});
 
 var starter = "stopped";
 var currentMode = -1;

@@ -1,5 +1,8 @@
-{"direction": 1, "left": 270, "right": 530, "straight": 400,
-                "gas": 2, "drive": 400, "stop": 210, "neutral": 385,
-                "drive_max": 420, "rev_neutral": 370,
-                "rev_drive": 360, "rev_drive_max": 350, "rev_stop": 400,
-                "go_t": 0.25, "stop_t": -0.25, "left_t": 0.5, "right_t": -0.5, "invert_dir": -1}
+{
+	"direction_pin": 1, "gas_pin": 2,
+	"left": 270, "right": 530, "straight": 400,
+	"drive": 400, "stop": 210, "neutral": 385,
+	"drive_max": 420, "rev_neutral": 370,
+	"rev_drive": 360, "rev_drive_max": 350, "rev_stop": 400,
+	"go_t": 0.25, "stop_t": -0.25, "left_t": 0.5, "right_t": -0.5, "invert_dir": -1
+}

@@ -96,11 +96,11 @@ def autopilot(img, prediction):
     local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
     local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
 
-    pwm.set_pwm(commands['direction'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+    pwm.set_pwm(commands['direction_pin'], 0, int(local_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
     if state == "started":
-        pwm.set_pwm(commands['gas'], 0, int(local_gas * (commands['drive_max'] - commands['drive']) + commands['drive']))
+        pwm.set_pwm(commands['gas_pin'], 0, int(local_gas * (commands['drive_max'] - commands['drive']) + commands['drive']))
     else:
-        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['neutral'])
 
 
 def dirauto(img, prediction):
@@ -109,7 +109,7 @@ def dirauto(img, prediction):
     index_class = prediction.index(max(prediction))
 
     local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
-    pwm.set_pwm(commands['direction'], 0,
+    pwm.set_pwm(commands['direction_pin'], 0,
                 int(local_dir * (commands['right'] - commands['left']) / 2. + commands['straight']))
 
 
@@ -179,7 +179,7 @@ def on_switch_mode(data):
         state = "stopped"
         socketIO.emit('starter')
     # Stop the gas before switching mode
-    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+    pwm.set_pwm(commands['gas_pin'], 0 , commands['neutral'])
     mode = data
     if data == "dirauto":
         socketIO.off('dir')
@@ -208,7 +208,7 @@ def on_switch_mode(data):
         socketIO.emit('msg2user', ' Resting')
     print('switched to mode : ', data)
     # Make sure we stop even if the previous mode sent a last command before switching.
-    pwm.set_pwm(commands['gas'], 0 , commands['neutral'])
+    pwm.set_pwm(commands['gas_pin'], 0 , commands['neutral'])
 
 
 def on_start(data):
@@ -222,22 +222,22 @@ def on_dir(data):
     curr_dir = commands['invert_dir'] * float(data)
     if curr_dir == 0:
         #print(commands['straight'])
-        pwm.set_pwm(commands['direction'], 0 , commands['straight'])
+        pwm.set_pwm(commands['direction_pin'], 0 , commands['straight'])
     else:
         #print(int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
-        pwm.set_pwm(commands['direction'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
+        pwm.set_pwm(commands['direction_pin'], 0 , int(curr_dir * (commands['right'] - commands['left'])/2. + commands['straight']))
 
 
 def on_gas(data):
     global curr_gas, max_speed_rate
     curr_gas = float(data) * max_speed_rate
     if curr_gas < 0:
-        pwm.set_pwm(commands['gas'], 0, commands['stop'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['stop'])
     elif curr_gas == 0:
-        pwm.set_pwm(commands['gas'], 0, commands['neutral'])
+        pwm.set_pwm(commands['gas_pin'], 0, commands['neutral'])
     else:
         #print(curr_gas * (commands['drive_max'] - commands['drive']) + commands['drive'])
-        pwm.set_pwm(commands['gas'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
+        pwm.set_pwm(commands['gas_pin'], 0, int(curr_gas * (commands['drive_max']-commands['drive']) + commands['drive']))
 
 
 def on_max_speed_update(new_max_speed):
