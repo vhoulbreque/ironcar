@@ -8,10 +8,10 @@ import scipy.misc
 import json
 import numpy as np
 
-import picamera
-import picamera.array
-
 try:
+    import picamera
+    import picamera.array
+
     from Adafruit_BNO055 import BNO055
     import Adafruit_PCA9685
 
@@ -21,7 +21,7 @@ except Exception as e:
     print('An exception occured : ', e)
 
 
-MODELS_PATH = './autopilots/'
+MODELS_PATH = './models/'
 FPS = 60
 CAM_RESOLUTION = (250, 150)
 COMMANDS_JSON_FILE = 'commands.json'
@@ -32,9 +32,14 @@ save_folder = os.path.join('datasets/', str(ct))
 if not os.path.exists(save_folder):
     os.makedirs(save_folder)
 
-# PWM setup
-pwm = Adafruit_PCA9685.PCA9685()
-pwm.set_pwm_freq(60)
+print('Saving images in {}'.format(save_folder))
+
+try:
+    # PWM setup
+    pwm = Adafruit_PCA9685.PCA9685()
+    pwm.set_pwm_freq(60)
+except:
+    pwm = None
 
 
 class Ironcar():
@@ -55,7 +60,7 @@ class Ironcar():
         self.n_img = 0
         self.save_number = 0
 
-        self.mode_function = default_call
+        self.mode_function = self.default_call
 
         with open(COMMANDS_JSON_FILE) as json_file:
             self.commands = json.load(json_file)
