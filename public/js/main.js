@@ -1,4 +1,5 @@
-var socket = io.connect();
+var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
+    
 
 $(document).ready( function() {
     $('#model-group').hide();

@@ -10,7 +10,7 @@ ironcar = Ironcar()
 
 # ------- WEB PAGES --------
 @app.route('/')
-def hello_world():
+def main():
 	return render_template('index.html')
 
 
@@ -46,7 +46,7 @@ def handle_starter():
 	"""
 	print('starter switch')
 
-	emit('starter_switch', {'activated':False}) #switch it
+	emit('starter_switch', {'activated':False}, namespace='/car') #switch it
 
 
 @socketio.on('max_speed_update')
@@ -80,7 +80,7 @@ def handle_streaming():
 	"""
 	print('streaming switch')
 
-	emit('stream_switch', {'activated':False}) #switch it
+	emit('stream_switch', {'activated':False}, namespace='/car') #switch it
 
 
 @socketio.on('take_picture')
@@ -90,7 +90,7 @@ def take_picture():
 	"""
 	print('TAKE A PICTURE')
 
-	emit('picture', {'base64':'dede'})
+	emit('picture', {'base64':'dede'}, namespace='/car')
 
 
 if __name__ == '__main__':
