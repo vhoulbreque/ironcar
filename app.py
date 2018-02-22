@@ -98,5 +98,3 @@ if __name__ == '__main__':
 	print('# IRONCAR SERVER')
 	print('#' * 50)
 	socketio.run(app)
-
-	ironcar = Ironcar()
