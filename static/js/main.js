@@ -80,7 +80,6 @@ $("#starter").click(function( event ) {
 socket.on('starter_switch', function(data){
     var state = 'Stop';
     console.log('here');
-    console.log(data);
     if (data == false){
         state = 'Start';
         $('[data-mode').prop("disabled",false);

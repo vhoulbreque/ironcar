@@ -14,7 +14,10 @@ ironcar = Ironcar()
 # ------- WEB PAGES --------
 @app.route('/')
 def main():
-	return render_template('index.html')
+
+	#TODO fetch models
+	models = []
+	return render_template('index.html', models=models)
 
 @app.route('/picture')
 def picture():
