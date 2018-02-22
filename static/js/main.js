@@ -121,27 +121,9 @@ socket.on('stream_switch', function(data) {
 
 $("#take-picture").click(function(event) {
     event.preventDefault();
-    console.log('take_picture')
-    socket.emit('take_picture');
+    window.open('/picture','_blank');
 });
 
-socket.on('picture', function(data) {
-    console.log('PICTURE RECEIVED');
-    if (data.image) {
-
-        // Simulate clicking to download
-        var a = $('<a>',{
-            text: 'text',
-            title: 'title',
-            href: 'data:image/jpeg;base64,' + data.buffer,
-            download: 'filename.jpg'
-        }).appendTo('body').click()
-
-        a[0].click();
-        a.remove();
-
-    }
-});
 
 // -------- AUTOPILOT MODEL -----------
 
