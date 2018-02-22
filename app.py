@@ -1,18 +1,24 @@
 from flask import Flask, send_from_directory, render_template
 from flask_socketio import SocketIO, emit
 
+from ironcar import Ironcar
+
 app = Flask(__name__)
 socketio = SocketIO(app)
+ironcar = Ironcar()
+
 
 # ------- WEB PAGES --------
 @app.route('/')
 def hello_world():
 	return render_template('index.html')
 
+
 # ------- WEB PAGES utils --
 @app.route('/<path:path>')
 def send_public(path):
 	return send_from_directory('public/', path)
+
 
 # ------- SOCKETS ----------
 @socketio.on('mode_update')
@@ -21,6 +27,8 @@ def mode_update(mode):
 	Change the driving mode of the car
 	"""
 	print('mode: ' + mode)
+	ironcar.mode = mode
+
 
 @socketio.on('model_update')
 def model_update(model):
@@ -28,6 +36,8 @@ def model_update(model):
 	Change the machine learning model used by the car
 	"""
 	print('model update: ' + model)
+	ironcar.model = model
+
 
 @socketio.on('starter')
 def handle_starter():
@@ -46,6 +56,7 @@ def update_max_speed(speed):
 	"""
 	print('max speed update received: ' + str(speed))
 
+
 @socketio.on('gas')
 def handle_gas(gas):
 	"""
@@ -53,12 +64,14 @@ def handle_gas(gas):
 	"""
 	print('gas order: ' + str(gas))
 
+
 @socketio.on('dir')
 def handle_dir(direction):
 	"""
 	Send a dir order for manual mode
 	"""
 	print('dir : ' + str(direction))
+
 
 @socketio.on('streaming_starter')
 def handle_streaming():
@@ -69,6 +82,7 @@ def handle_streaming():
 
 	emit('stream_switch', {'activated':False}) #switch it
 
+
 @socketio.on('take_picture')
 def take_picture():
 	"""
@@ -77,7 +91,7 @@ def take_picture():
 	print('TAKE A PICTURE')
 
 	emit('picture', {'base64':'dede'})
-	
+
 
 if __name__ == '__main__':
 	print('#' * 50)
@@ -85,5 +99,4 @@ if __name__ == '__main__':
 	print('#' * 50)
 	socketio.run(app)
 
-
-
+	ironcar = Ironcar()

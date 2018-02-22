@@ -3,22 +3,22 @@ socket = io();
 
 $('.stop').hide();
 
-socket.on('liveStream', function(url_string) {
-    $('#stream_image').attr('xlink:href', url_string);
+socket.on('picture_stream', function(data) {
+    // data = { image: true, buffer: img_base64, index: index_class}
+    if (data.image) {
+        $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,'+data.buffer);
 
-    // TODO find acc and angle in image name
-    var param_arr = url_string.split('_');
-    var steering = parseInt(param_arr[param_arr.length-2].split('.')[0]);
-
-    // TODO verify if correct. Here we assert many things
-    var steer_to_arrow = ['35','80','-1','150','175'];
-    if (steer_to_arrow == '-1') {
-    	$('#dirline').attr('visibility', 'hidden');
-    } else {
-    	$('#dirline').attr('visibility', 'visible');
-	    $('#dirline').attr('x2', steer_to_arrow[steering]);
+        // TODO find acc and angle in image name
+        // TODO verify if correct. Here we assert many things
+        var steer_to_arrow = ['35','80','-1','150','175'];
+        if (steer_to_arrow == '-1') {
+        	$('#dirline').attr('visibility', 'hidden');
+        } else {
+        	$('#dirline').attr('visibility', 'visible');
+    	    $('#dirline').attr('x2', steer_to_arrow[data.index]);
+        }
+        $('.start').hide();
+        $('.stop').show();
     }
-    $('.start').hide();
-    $('.stop').show();
 });
 

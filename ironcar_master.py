@@ -200,7 +200,7 @@ def on_switch_mode(data):
         socketIO.on('dir', on_dir)
         mode_function = training
         socketIO.emit('msg2user', ' Training mode. Please use a keyboard or a gamepad for control.')
-    else: 
+    else:
         mode_function = default_call
         socketIO.emit('msg2user', ' Resting')
     print('switched to mode : ', data)

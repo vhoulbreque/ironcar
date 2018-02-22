@@ -16,7 +16,7 @@ $("[data-mode]").click(function(event) {
     $("[data-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
     console.log(mode);
-    socket.emit("modeSwitched", mode);
+    socket.emit("mode_update", mode);
 
     if (mode == 'training') {
         $('#model-group').hide();
@@ -63,14 +63,9 @@ function handle(e) {
 function maxSpeedUdate(){
     var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
     document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + newMaxSpeed + "%";
-    socket.emit("maxSpeed", newMaxSpeed / 100.);
+    socket.emit("max_speed_update", newMaxSpeed / 100.);
 }
 
-// update the current max speed
-socket.on('maxSpeedUpdate', function(maxSpeed){
-    document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + Math.round(maxSpeed * 100) + "%";
-    document.getElementById("maxSpeedSlider").value = maxSpeed * 100;
-});
 
 
 // -------- STARTER -----------
@@ -81,9 +76,11 @@ $("#starter").click(function( event ) {
   socket.emit('starter');
 });
 
-socket.on('starterUpdate', function(data){
+socket.on('starter_switch', function(data){
     var state = 'Stop';
-    if (data == "stopped"){
+    console.log('here');
+    console.log(data);
+    if (data == false){
         state = 'Start';
         $('[data-mode').prop("disabled",false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
@@ -100,14 +97,14 @@ socket.on('starterUpdate', function(data){
 
 $("#camera").click(function(event) {
     event.preventDefault();
-    socket.emit('streamUpdate');
+    socket.emit('streaming_starter');
     // TODO might be better to handle this in the callback bellow as far the start button
 });
 
-socket.on('stream', function(data) {
+socket.on('stream_switch', function(data) {
     state = "Stop camera";
 
-    if (data == "stopped"){
+    if (data == false){
         state = "Start camera";
         $("#camera").removeClass('btn-danger').addClass('btn-info');
         $('#dirline').attr('visibility', 'hidden');
@@ -123,7 +120,8 @@ socket.on('stream', function(data) {
 
 $("#take-picture").click(function(event) {
     event.preventDefault();
-    socket.emit('takePicture');
+    console.log('take_picture')
+    socket.emit('take_picture');
 });
 
 socket.on('picture', function(data) {
@@ -181,6 +179,3 @@ socket.on("model_update", function(modelSelected){
 socket.on('msg2user', function(message){
     $("#Status").text(message);
 });
-
-
-socket.emit('clientLoadedPage', true);
