@@ -22,6 +22,7 @@ except Exception as e:
 
 
 MODELS_PATH = './models/'
+STREAM_PATH = './stream/'
 FPS = 60
 CAM_RESOLUTION = (250, 150)
 COMMANDS_JSON_FILE = 'commands.json'
@@ -68,6 +69,19 @@ class Ironcar():
 
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
+
+
+	def picture(self):
+		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
+		print("pictures : ", pictures)
+		if len(pictures):
+			p = pictures[-1]
+			return os.path.join(STREAM_PATH, p)
+		else:
+			if self.verbose:
+				print('There is no picture to send')
+			return None
+
 
 	def gas(self, value):
 		"""
