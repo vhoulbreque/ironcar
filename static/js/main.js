@@ -79,8 +79,7 @@ $("#starter").click(function( event ) {
 
 socket.on('starter_switch', function(data){
     var state = 'Stop';
-    console.log('here');
-    if (data == false){
+    if (data.activated == false){
         state = 'Start';
         $('[data-mode').prop("disabled",false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
@@ -104,7 +103,7 @@ $("#camera").click(function(event) {
 socket.on('stream_switch', function(data) {
     state = "Stop camera";
 
-    if (data == false){
+    if (data.activated == false){
         state = "Start camera";
         $("#camera").removeClass('btn-danger').addClass('btn-info');
         $('#dirline').attr('visibility', 'hidden');

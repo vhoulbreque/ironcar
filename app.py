@@ -69,8 +69,8 @@ def handle_starter():
 	Start / Stop the car
 	"""
 	print('starter switch')
-
-	emit('starter_switch', {'activated':False}, namespace='/car') #switch it
+	state = ironcar.on_start()
+	emit('starter_switch', {'activated':state}, namespace='/car') #switch it
 
 
 @socketio.on('max_speed_update')
@@ -103,8 +103,8 @@ def handle_streaming():
 	To start / stop the streaming mode
 	"""
 	print('streaming switch')
-
-	emit('stream_switch', {'activated':False}, namespace='/car') #switch it
+	state = ironcar.switch_streaming()
+	emit('stream_switch', {'activated':state}, namespace='/car') #switch it
 
 
 if __name__ == '__main__':
