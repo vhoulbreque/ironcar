@@ -10,7 +10,7 @@ from ironcar import Ironcar
 
 MODELS_PATH = './models/'
 
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__, static_url_path='/front/static', template_folder='front/templates/')
 socketio = SocketIO(app)
 ironcar = Ironcar()
 
