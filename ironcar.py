@@ -51,9 +51,14 @@ class Ironcar():
 
 	def __init__(self):
 
+		if not os.path.exists(STREAM_PATH):
+			os.makedirs(STREAM_PATH)
+
+		if not os.path.exists(MODELS_PATH):
+			os.makedirs(MODELS_PATH)
+
 		self.mode = 'resting'
 		self.started = False #If True, car will move, if False car won't move.
-		self.running = True
 		self.model = None
 		self.graph = None
 		self.curr_dir = 0
@@ -286,8 +291,6 @@ class Ironcar():
 
 		for f in stream:
 			img_arr = f.array
-			if not self.running:
-				break
 
 			prediction = self.predict_from_img(img_arr)
 			self.mode_function(img_arr, prediction)
