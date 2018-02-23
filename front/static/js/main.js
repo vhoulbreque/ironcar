@@ -1,5 +1,4 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
-    
 
 $(document).ready( function() {
     $('#model-group').hide();
@@ -99,7 +98,6 @@ socket.on('starter_switch', function(data){
 $("#camera").click(function(event) {
     event.preventDefault();
     socket.emit('streaming_starter');
-    // TODO might be better to handle this in the callback bellow as far the start button
 });
 
 socket.on('stream_switch', function(data) {
@@ -156,9 +154,35 @@ socket.on("model_update", function(modelSelected){
     mySelect.selectedIndex = modelIndex;
 });
 
+
+socket.on('picture_stream', function(data) {
+    // TODO Check
+    // data = { image: true, buffer: img_base64, index: index_class}
+    if (data.image) {
+        $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,'+data.buffer);
+
+        // TODO find acc and angle in image name
+        // TODO verify if correct. Here we assert many things
+        var steer_to_arrow = ['35','80','-1','150','175'];
+        if (steer_to_arrow == '-1') {
+            $('#dirline').attr('visibility', 'hidden');
+        } else {
+            $('#dirline').attr('visibility', 'visible');
+            $('#dirline').attr('x2', steer_to_arrow[data.index]);
+        }
+        $('.start').hide();
+        $('.stop').show();
+    }
+});
+
 // -------- USER INFO -----------
 
 // Message to the user
 socket.on('msg2user', function(message){
+    // TODO hide / show box + change color for success / warning / ...
     $("#Status").text(message);
 });
+
+
+// TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
+socket = io();
