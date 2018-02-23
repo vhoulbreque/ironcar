@@ -56,7 +56,7 @@ class Ironcar():
 		self.curr_gas = 0
 		self.max_speed_rate = 0.5
 		self.model_loaded = False
-		self.streaming_state = True
+		self.streaming_state = False
 		self.n_img = 0
 		self.save_number = 0
 
