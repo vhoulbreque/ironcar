@@ -21,6 +21,11 @@ def main():
 	print('SERVER : models : ', models)
 	return render_template('index.html', models=models)
 
+@app.route('/commands')
+def commands():
+	commands = ironcar.commands
+	return render_template('commands.html', commands=commands)
+
 
 @app.route('/picture')
 def picture():
