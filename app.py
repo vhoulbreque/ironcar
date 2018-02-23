@@ -31,9 +31,12 @@ def picture():
 	print('path_picture : ', path_picture)
 
 	if path_picture:
-		return send_file(path_picture,
-						mimetype='image/jpg',
+		r = send_file(path_picture,
 						as_attachment=True)
+		r.headers["Pragma"] = "no-cache"
+		r.headers["Expires"] = "0"
+		r.headers['Cache-Control'] = 'public, max-age=0'
+		return r
 
 
 # ------- SOCKETS ----------
