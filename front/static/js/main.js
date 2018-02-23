@@ -63,7 +63,6 @@ function handle(e) {
 
 function maxSpeedUdate(){
     var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
-    //TODO update this field with a callback from the server so we have the true value
     socket.emit("max_speed_update", newMaxSpeed / 100.);
 }
 
