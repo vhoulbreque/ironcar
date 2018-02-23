@@ -218,13 +218,14 @@ class Ironcar():
 			new_value = int(self.curr_gas * (self.commands['drive_max']-self.commands['drive']) + self.commands['drive'])
 		self.gas(new_value)
 
-	def on_max_speed_update(self, new_max_speed):
+	def max_speed_update(self, new_max_speed):
 		"""
 		Changes the max_speed of the car.
 		"""
 		self.max_speed_rate = new_max_speed
 		if self.verbose:
 			print('The new max_speed is : ', self.max_speed_rate)
+		return self.max_speed_rate
 
 	def predict_from_img(self, img):
 		"""
