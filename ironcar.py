@@ -60,6 +60,7 @@ class Ironcar():
 		self.n_img = 0
 		self.save_number = 0
 
+		self.verbose = True
 		self.mode_function = self.default_call
 
 		with open(COMMANDS_JSON_FILE) as json_file:
@@ -69,27 +70,48 @@ class Ironcar():
 		self.camera_thread.start()
 
 	def gas(self, value):
+		"""
+		Send the pwm signal on the gas channel
+		"""
 		if pwm is not None:
 			pwm.set_pwm(self.commands['gas_pin'], 0 , value)
+			if self.verbose:
+				print('GAS : ', value)
 		else:
-			print('PWM module not loaded')
+			if self.verbose:
+				print('PWM module not loaded')
 
 	def dir(self, value):
+		"""
+		Send the pwm signal on the dir channel
+		"""
 		if pwm is not None:
 			pwm.set_pwm(self.commands['dir_pin'], 0 , value)
+			if self.verbose:
+				print('DIR : ', value)
 		else:
-			print('PWM module not loaded')
+			if self.verbose:
+				print('PWM module not loaded')
 
 	def get_gas_from_dir(self, dir):
+		"""
+		Given the prediction of the direction by the NN, determine the gas value
+		"""
 		return 0.2
 
 	def autopilot(self, img, prediction):
+		"""
+		Sends the pwm gas and dir values according to the prediction of the NN.
+
+		img: unused. But has to stay because other modes need it.
+		prediction: array of softmax
+		"""
 		index_class = prediction.index(max(prediction))
 		local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
 		local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
 
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight']))
-		gas_value = 0
+
 		if self.started == "started":
 			gas_value = int(local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
 		else:
@@ -97,14 +119,20 @@ class Ironcar():
 		self.gas(gas_value)
 
 	def dirauto(self, img, prediction):
+		"""
+		Set the pwm values for dir according to the prediction from the NN.
+
+		"""
 		index_class = prediction.index(max(prediction))
 
 		local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight']))
 
 	def training(self, img, prediction):
-		global n_img
-		image_name = os.path.join(self.save_folder, 'frame_' + str(n_img) + '_gas_' +
+		"""
+		Saves the image of the picamera with the right labels of dir and gas.
+		"""
+		image_name = os.path.join(self.save_folder, 'frame_' + str(self.n_img) + '_gas_' +
 								  str(self.curr_gas) + '_dir_' + str(self.curr_dir) +
 								  '_' + '.jpg')
 		img_arr = np.array(img[80:, :, :], copy=True)
@@ -112,9 +140,19 @@ class Ironcar():
 		n_img += 1
 
 	def default_call(self, img, prediction):
+		"""
+		Default function call. Does nothing.
+		"""
 		pass
 
 	def on_switch_mode(self, new_mode):
+		"""
+		Switches the mode between:
+			- training
+			- rest
+			- dirauto
+			- auto
+		"""
 
 		# always switch the starter to stopped when switching mode
 		self.started = False
@@ -126,12 +164,14 @@ class Ironcar():
 			if self.model_loaded:
 				self.mode_function = self.dirauto
 			else:
-				print("model not loaded")
+				if self.verbose:
+					print("model not loaded")
 		elif new_mode == "auto":
 			if self.model_loaded:
 				self.mode_function = self.autopilot
 			else:
-				print("model not loaded")
+				if self.verbose:
+					print("model not loaded")
 		elif new_mode == "training":
 			self.mode_function = self.training
 		else:
@@ -139,22 +179,24 @@ class Ironcar():
 
 		# Make sure we stop even if the previous mode sent a last command before switching.
 		self.gas(commands['neutral'])
-		print('switched to mode : ', new_mode)
+		if self.verbose:
+			print('switched to mode : ', new_mode)
 
 	def on_start(self):
 		"""
 		Switch started mode between True and False.
 		"""
 		self.started = not self.started
-		print('starter set to {}'.format(self.started))
+		if self.verbose:
+			print('starter set to {}'.format(self.started))
 		return self.started
 
 	def on_dir(self, data):
 		"""
-		TODO explain data
+		Triggered when a value from the keyboard/gamepad is received for dir.
+		data: intensity of the key pressed.
 		"""
 		self.curr_dir = self.commands['invert_dir'] * float(data)
-		new_value = 0
 		if self.curr_dir == 0:
 			new_value = self.commands['straight']
 		else:
@@ -163,11 +205,11 @@ class Ironcar():
 
 	def on_gas(self, data):
 		"""
-		TODO explain data
+		Triggered when a value from the keyboard/gamepad is received for gas.
+		data: intensity of the key pressed.
 		"""
 		self.curr_gas = float(data) * self.max_speed_rate
 
-		new_value = 0
 		if self.curr_gas < 0:
 			new_value = self.commands['stop']
 		elif self.curr_gas == 0:
@@ -177,7 +219,12 @@ class Ironcar():
 		self.gas(new_value)
 
 	def on_max_speed_update(self, new_max_speed):
+		"""
+		Changes the max_speed of the car.
+		"""
 		self.max_speed_rate = new_max_speed
+		if self.verbose:
+			print('The new max_speed is : ', self.max_speed_rate)
 
 	def predict_from_img(self, img):
 		"""
@@ -190,24 +237,28 @@ class Ironcar():
 
 			with self.graph.as_default():
 				pred = self.model.predict(img)
-				print('pred : ', pred)
+				if self.verbose:
+					print('pred : ', pred)
 			prediction = list(pred[0])
 		except:
-			print('Prediction error')
+			if self.verbose:
+				print('Prediction error')
 			prediction = [0, 0, 1, 0, 0]
 
 		return prediction
 
 	def camera_loop(self):
 		"""
-		TODO documentation, explain output data
+		Makes the camera take pictures and save them.
+		This loop will be executed in a separate thread.
 		"""
 
 		try:
 			cam = picamera.PiCamera(framerate=FPS)
 		except Exception as e:
 			# TODO improve
-			print('Cant load camera')
+			if self.verbose:
+				print('Cant load camera')
 			return
 
 		cam.resolution = CAM_RESOLUTION
@@ -226,7 +277,6 @@ class Ironcar():
 				str_n = '0'*(5-len(str(self.save_number))) + str(self.save_number)
 				index_class = prediction.index(max(prediction))
 				image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
-				#print('Saving image at path : ', image_name)
 				self.save_number += 1
 				scipy.misc.imsave(image_name, img_arr)
 				socketIO.emit(image_name)
@@ -234,15 +284,22 @@ class Ironcar():
 			cam_output.truncate(0)
 
 	def switch_streaming(self):
+		"""
+		Switches the streaming state.
+		"""
 		self.streaming_state = not self.streaming_state
-		print('Streaming state set to {}'.format(self.streaming_state))
+		if self.verbose:
+			print('Streaming state set to {}'.format(self.streaming_state))
 		return self.streaming_state
 
 	def on_model_selected(self, model_name):
+		"""
+		Changes the model of autopilot selected and loads it.
+		"""
 		global MODELS_PATH
 
 		if model_name == self.current_model or model_name == -1: return 0
-		new_model_path = os.path.join(models_path, model_name)
+		new_model_path = os.path.join(MODELS_PATH, model_name)
 
 		try:
 			self.model = load_model(new_model_path)
@@ -251,5 +308,9 @@ class Ironcar():
 
 			self.model_loaded = True
 			self.on_switch_mode(self.mode)
+
+			if self.verbose:
+				print('The model {} has been successfully loaded'.format(self.current_model))
 		except OSError as e:
-			print('An Exception occured : ', e)
+			if self.verbose:
+				print('An Exception occured : ', e)
