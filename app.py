@@ -14,13 +14,13 @@ app = Flask(__name__, static_url_path='/static', static_folder='front/static/', 
 socketio = SocketIO(app)
 
 
-
 # ------- WEB PAGES --------
 @app.route('/')
 def main():
 	models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
 	print('SERVER : models : ', models)
 	return render_template('index.html', models=models)
+
 
 @app.route('/picture')
 def picture():
@@ -31,9 +31,7 @@ def picture():
 	print('path_picture : ', path_picture)
 
 	if path_picture:
-		return send_file(path_picture,
-						mimetype='image/jpg',
-						as_attachment=True)
+		return send_file(path_picture, mimetype='image/jpg', as_attachment=True)
 
 
 # ------- SOCKETS ----------
@@ -43,7 +41,7 @@ def mode_update(mode):
 	Change the driving mode of the car
 	"""
 	print('SERVER : mode: ' + mode)
-	ironcar.mode = mode
+	ironcar.switch_mode(mode)
 
 
 @socketio.on('model_update')
@@ -52,7 +50,7 @@ def model_update(model):
 	Change the machine learning model used by the car
 	"""
 	print('SERVER : model update: ' + model)
-	ironcar.model = model
+	ironcar.select_model(model)
 
 
 @socketio.on('starter')
@@ -62,7 +60,7 @@ def handle_starter():
 	"""
 	print('SERVER : starter switch')
 	state = ironcar.on_start()
-	emit('starter_switch', {'activated':state}, namespace='/car') #switch it
+	emit('starter_switch', {'activated': state}, namespace='/car') # switch it
 
 
 @socketio.on('max_speed_update')
@@ -73,8 +71,7 @@ def update_max_speed(speed):
 	new_speed = ironcar.max_speed_update(speed)
 	print(speed)
 	print('SERVER : max speed update received: ' + str(speed))
-	emit('max_speed_update_callback', {'speed':new_speed}, namespace='/car') #switch it
-
+	emit('max_speed_update_callback', {'speed':new_speed}, namespace='/car') # switch it
 
 
 @socketio.on('gas')
@@ -83,6 +80,7 @@ def handle_gas(gas):
 	Send a gas order for manual mode
 	"""
 	print('SERVER : gas order: ' + str(gas))
+	ironcar.on_gas(gas)
 
 
 @socketio.on('dir')
@@ -91,6 +89,7 @@ def handle_dir(direction):
 	Send a dir order for manual mode
 	"""
 	print('SERVER : dir : ' + str(direction))
+	ironcar.on_dir(direction)
 
 
 @socketio.on('streaming_starter')
@@ -100,7 +99,16 @@ def handle_streaming():
 	"""
 	print('SERVER : streaming switch')
 	state = ironcar.switch_streaming()
-	emit('stream_switch', {'activated':state}, namespace='/car') #switch it
+	emit('stream_switch', {'activated': state}, namespace='/car') # switch it
+
+
+@socketio.on('verbose')
+def handle_verbose(verbose):
+	"""
+	Handle verbose of ironcar
+	"""
+	print('SERVER : verbose switch')
+	ironcar.switch_verbose(verbose)
 
 
 if __name__ == '__main__':

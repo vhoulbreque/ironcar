@@ -1,5 +1,3 @@
-from threading import Thread
-
 import sys
 import os
 import time
@@ -7,6 +5,8 @@ import datetime
 import scipy.misc
 import json
 import numpy as np
+
+from threading import Thread
 
 try:
 	import picamera
@@ -44,7 +44,10 @@ except:
 
 
 class Ironcar():
-
+	"""
+	Class of the car. Contains all the different fields, functions needed to
+	control the car.
+	"""
 
 	def __init__(self):
 
@@ -60,6 +63,7 @@ class Ironcar():
 		self.streaming_state = False
 		self.n_img = 0
 		self.save_number = 0
+		self.current_model = None
 
 		self.verbose = True
 		self.mode_function = self.default_call
@@ -159,7 +163,7 @@ class Ironcar():
 		"""
 		pass
 
-	def on_switch_mode(self, new_mode):
+	def switch_mode(self, new_mode):
 		"""
 		Switches the mode between:
 			- training
@@ -192,7 +196,7 @@ class Ironcar():
 			self.mode_function = self.default_call
 
 		# Make sure we stop even if the previous mode sent a last command before switching.
-		self.gas(commands['neutral'])
+		self.gas(self.commands['neutral'])
 		if self.verbose:
 			print('switched to mode : ', new_mode)
 
@@ -291,7 +295,7 @@ class Ironcar():
 			if self.streaming_state:
 				str_n = '0'*(5-len(str(self.save_number))) + str(self.save_number)
 				index_class = prediction.index(max(prediction))
-				image_name = './stream/image_stream_{}_{}.jpg'.format(str_n, index_class)
+				image_name = os.path.join(STREAM_PATH, 'image_stream_{}_{}.jpg'.format(str_n, index_class))
 				self.save_number += 1
 				scipy.misc.imsave(image_name, img_arr)
 				socketIO.emit(image_name)
@@ -307,7 +311,7 @@ class Ironcar():
 			print('Streaming state set to {}'.format(self.streaming_state))
 		return self.streaming_state
 
-	def on_model_selected(self, model_name):
+	def select_model(self, model_name):
 		"""
 		Changes the model of autopilot selected and loads it.
 		"""
@@ -322,10 +326,15 @@ class Ironcar():
 			self.current_model = model_name
 
 			self.model_loaded = True
-			self.on_switch_mode(self.mode)
+			self.switch_mode(self.mode)
 
 			if self.verbose:
 				print('The model {} has been successfully loaded'.format(self.current_model))
 		except OSError as e:
 			if self.verbose:
 				print('An Exception occured : ', e)
+
+	def switch_verbose(self, new_verbose):
+		if self.verbose:
+			print('Switch verbose from {} to {}'.format(self.verbose, new_verbose))
+		self.verbose = new_verbose
