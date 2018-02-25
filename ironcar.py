@@ -83,8 +83,7 @@ class Ironcar():
 
 		self.verbose = True
 		self.mode_function = self.default_call
-		print('here')
-		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=False)
+		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=True)
 		self.socketIO = self.socketIO_def.define(CarNamespace, '/car')
 
 		with open(COMMANDS_JSON_FILE) as json_file:
