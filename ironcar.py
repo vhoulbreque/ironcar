@@ -83,15 +83,22 @@ class Ironcar():
 
 		self.verbose = True
 		self.mode_function = self.default_call
-		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=True)
-		self.socketIO = self.socketIO_def.define(CarNamespace, '/car')
-
+		
 		with open(COMMANDS_JSON_FILE) as json_file:
 			self.commands = json.load(json_file)
 
+
+		self.socketIO = None
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
+		
+		
 
+	def connect_start_cam(self):
+		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=False)
+		self.socketIO = self.socketIO_def.define(CarNamespace, '/car')
+		
+		print('try connect')
 
 	def picture(self):
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
@@ -279,7 +286,7 @@ class Ironcar():
 			prediction = list(pred[0])
 		except:
 			if self.verbose:
-				print('Prediction error')
+				pass#print('Prediction error')
 			prediction = [0, 0, 1, 0, 0]
 
 		return prediction
@@ -289,6 +296,14 @@ class Ironcar():
 		Makes the camera take pictures and save them.
 		This loop will be executed in a separate thread.
 		"""
+
+		if self.socketIO == None:
+			try:
+				self.connect_start_cam()
+			except:
+				print('no socket')
+		else:
+			print('socketIO not none')
 
 		try:
 			cam = picamera.PiCamera(framerate=FPS)
@@ -314,7 +329,8 @@ class Ironcar():
 				image_name = os.path.join(STREAM_PATH, 'image_stream_{}_{}.jpg'.format(str_n, index_class))
 				self.save_number += 1
 				scipy.misc.imsave(image_name, img_arr)
-				socketIO.emit(image_name)
+				# TODO emit base 64 not image
+				self.socketIO.emit(image_name)
 
 			cam_output.truncate(0)
 
