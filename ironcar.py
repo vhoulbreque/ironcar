@@ -5,6 +5,7 @@ import datetime
 import scipy.misc
 import json
 import numpy as np
+from socketIO_client import SocketIO, BaseNamespace
 
 from threading import Thread
 
@@ -42,6 +43,16 @@ try:
 except:
 	pwm = None
 
+class CarNamespace(BaseNamespace):
+
+    def on_connect(self):
+        print('[Connected]')
+
+    def on_reconnect(self):
+        print('[Reconnected]')
+
+    def on_disconnect(self):
+        print('[Disconnected]')
 
 class Ironcar():
 	"""
@@ -72,6 +83,9 @@ class Ironcar():
 
 		self.verbose = True
 		self.mode_function = self.default_call
+		print('here')
+		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=False)
+		self.socketIO = self.socketIO_def.define(CarNamespace, '/car')
 
 		with open(COMMANDS_JSON_FILE) as json_file:
 			self.commands = json.load(json_file)
