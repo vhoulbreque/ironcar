@@ -339,7 +339,9 @@ class Ironcar():
 		Changes the model of autopilot selected and loads it.
 		"""
 
-		if model_name == self.current_model or model_name == -1: return 0
+		if model_name == self.current_model:
+			socketio.emit('msg2user', {'type': 'info', 'msg': 'Model {} already loaded.'.format(self.current_model)}, namespace='/car')
+			return 0
 
 		try:
 			print(model_name)
@@ -351,8 +353,7 @@ class Ironcar():
 			self.switch_mode(self.mode)
 
 			if self.verbose:
-				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
-					
+				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')	
 				print('The model {} has been successfully loaded'.format(self.current_model))
 		except OSError as e:
 			if self.verbose:

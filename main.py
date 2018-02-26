@@ -50,6 +50,7 @@ def model_update(model):
 	"""
 	Change the machine learning model used by the car
 	"""
+	socketio.emit('msg2user', {'type': 'info', 'msg': 'Loading model {}...'.format(model)}, namespace='/car')
 	print('SERVER : model update: ' + model)
 	ironcar.select_model(model)
 

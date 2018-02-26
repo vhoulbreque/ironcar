@@ -2,7 +2,7 @@ var socket = io.connect('http://' + document.domain + ':' + location.port + '/ca
 
 $(document).ready( function() {
     $('#model-group').hide();
-    $('#alert').hide();
+    $('#status').hide();
     $('#control-group').show();
 });
 
@@ -190,6 +190,16 @@ socket.on('msg2user', function(data){
     $("#status").text(data.msg);
 });
 
+socket.on('disconnect', function() {
+    $("#serverStatus").removeClass().addClass('badge badge-danger');
+    $("#serverStatus").text('Connection lost !');
+});
+
+socket.on('connect', function(client) {
+    console.log(client);
+    $("#serverStatus").removeClass().addClass('badge badge-success');
+    $("#serverStatus").text('Connected');
+});
 
 // TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();

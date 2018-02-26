@@ -20,7 +20,7 @@
           <select class="form-control" id="model_select">
               <option selected>Choose model...</option>
               {% for model in models %}
-              <option value='models/autopilot_500k.hdf5'>{{model}}</option>
+              <option value='{{model}}'>{{model}}</option>
               {% endfor %}
           </select>
         </div>
