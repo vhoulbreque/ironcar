@@ -2,6 +2,7 @@ var socket = io.connect('http://' + document.domain + ':' + location.port + '/ca
 
 $(document).ready( function() {
     $('#model-group').hide();
+    $('#alert').hide();
     $('#control-group').show();
 });
 
@@ -178,9 +179,15 @@ socket.on('picture_stream', function(data) {
 // -------- USER INFO -----------
 
 // Message to the user
-socket.on('msg2user', function(message){
+socket.on('msg2user', function(data){
     // TODO hide / show box + change color for success / warning / ...
-    $("#Status").text(message);
+    // Format {'type': 'type', 'msg': 'message'}
+    // type is a bootstrap alert style type :
+    // primary, secondary, success, danger, warning, info, light, dark, link
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    $("#status").show();
+    $("#status").removeClass().addClass('alert alert-'+data.type);
+    $("#status").text(data.msg);
 });
 
 

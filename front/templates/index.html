@@ -1,10 +1,5 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="px-3 py-3 pt-md-2 pb-md-4 mx-auto text-center">
-  <div class="alert alert-warning" role="alert" id="Status">
-  </div>
-</div>
-
 <div class="container">
   <div class="row">
     <div class="col-lg-6 mb-3">
@@ -25,7 +20,7 @@
           <select class="form-control" id="model_select">
               <option selected>Choose model...</option>
               {% for model in models %}
-              <option value=''>{{model}}</option>
+              <option value='models/autopilot_500k.hdf5'>{{model}}</option>
               {% endfor %}
           </select>
         </div>

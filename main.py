@@ -72,7 +72,7 @@ def update_max_speed(speed):
 	new_speed = ironcar.max_speed_update(speed)
 	print(speed)
 	print('SERVER : max speed update received: ' + str(speed))
-	socketio.emit('max_speed_update_callback', {'speed':new_speed}, namespace='/car') # switch it
+	socketio.emit('max_speed_update_callback', {'speed': new_speed}, namespace='/car') # switch it
 
 
 @socketio.on('gas')

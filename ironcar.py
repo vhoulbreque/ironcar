@@ -14,17 +14,23 @@ import PIL # TODO check if all are useful
 try:
 	import picamera
 	import picamera.array
+except Exception as e:
+	print('Pi Camera error : ', e)
 
+try:
 	from Adafruit_BNO055 import BNO055
 	import Adafruit_PCA9685
+except Exception as e:
+	print('Adafruit error : ', e)
 
+try:
 	from keras.models import load_model
 	import tensorflow as tf
 except Exception as e:
-	print('An exception occured : ', e)
+	print('ML error : ', e)
 
 
-MODELS_PATH = './models/'
+# TODO put those variables in the commands.json file ?
 STREAM_PATH = './stream/'
 FPS = 60
 CAM_RESOLUTION = (250, 150)
@@ -56,10 +62,6 @@ class Ironcar():
 		if not os.path.exists(STREAM_PATH):
 			os.makedirs(STREAM_PATH)
 
-		if not os.path.exists(MODELS_PATH):
-			os.makedirs(MODELS_PATH)
-
-
 		self.mode = 'resting'
 		self.started = False #If True, car will move, if False car won't move.
 		self.model = None
@@ -85,6 +87,8 @@ class Ironcar():
 		
 
 	def picture(self):
+		# TODO this function won't work as expected if streaming mode is off.
+		# This function should take its own picture. 
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
 		print("pictures : ", pictures)
 		if len(pictures):
@@ -92,6 +96,7 @@ class Ironcar():
 			return os.path.join(STREAM_PATH, p)
 		else:
 			if self.verbose:
+				socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
 				print('There is no picture to send')
 			return None
 
@@ -148,7 +153,6 @@ class Ironcar():
 	def dirauto(self, img, prediction):
 		"""
 		Set the pwm values for dir according to the prediction from the NN.
-
 		"""
 		index_class = prediction.index(max(prediction))
 
@@ -183,6 +187,7 @@ class Ironcar():
 
 		# always switch the starter to stopped when switching mode
 		self.started = False
+		socketio.emit('starter_switch', {'activated': self.started}, namespace='/car') # Tell front we changed the mode.
 
 		# Stop the gas before switching mode
 		self.gas(self.commands['neutral'])
@@ -192,12 +197,14 @@ class Ironcar():
 				self.mode_function = self.dirauto
 			else:
 				if self.verbose:
+					socketio.emit('msg2user', {'type': 'warning', 'msg': 'Model not loaded'}, namespace='/car')
 					print("model not loaded")
 		elif new_mode == "auto":
 			if self.model_loaded:
 				self.mode_function = self.autopilot
 			else:
 				if self.verbose:
+					socketio.emit('msg2user', {'type': 'warning', 'msg': 'Model not loaded'}, namespace='/car')
 					print("model not loaded")
 		elif new_mode == "training":
 			self.mode_function = self.training
@@ -331,13 +338,12 @@ class Ironcar():
 		"""
 		Changes the model of autopilot selected and loads it.
 		"""
-		global MODELS_PATH
 
 		if model_name == self.current_model or model_name == -1: return 0
-		new_model_path = os.path.join(MODELS_PATH, model_name)
 
 		try:
-			self.model = load_model(new_model_path)
+			print(model_name)
+			self.model = load_model(model_name)
 			self.graph = tf.get_default_graph()
 			self.current_model = model_name
 
@@ -345,6 +351,8 @@ class Ironcar():
 			self.switch_mode(self.mode)
 
 			if self.verbose:
+				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
+					
 				print('The model {} has been successfully loaded'.format(self.current_model))
 		except OSError as e:
 			if self.verbose:
