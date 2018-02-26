@@ -196,7 +196,6 @@ socket.on('disconnect', function() {
 });
 
 socket.on('connect', function(client) {
-    console.log(client);
     $("#serverStatus").removeClass().addClass('badge badge-success');
     $("#serverStatus").text('Connected');
 });

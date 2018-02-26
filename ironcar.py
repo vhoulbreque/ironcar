@@ -275,9 +275,9 @@ class Ironcar():
 				if self.verbose:
 					print('pred : ', pred)
 			prediction = list(pred[0])
-		except:
+		except Exception as e:
 			if self.verbose:
-				pass#print('Prediction error')
+				pass#print('Prediction error : '+e)
 			prediction = [0, 0, 1, 0, 0]
 
 		return prediction
@@ -321,7 +321,7 @@ class Ironcar():
 				img_arr.save(buffered, format="JPEG")
 				img_str = base64.b64encode(buffered.getvalue())
 
-				socketio.emit('picture_stream', {'image': True, 'buffer': img_str, 'index': '3'}, namespace='/car')
+				socketio.emit('picture_stream', {'image': True, 'buffer': img_str, 'index': index_class}, namespace='/car')
 
 			cam_output.truncate(0)
 
