@@ -5,9 +5,11 @@ import datetime
 import scipy.misc
 import json
 import numpy as np
-from socketIO_client import SocketIO, BaseNamespace
-
+from app import socketio
+import base64
+from io import BytesIO
 from threading import Thread
+import PIL # TODO check if all are useful
 
 try:
 	import picamera
@@ -43,17 +45,6 @@ try:
 except:
 	pwm = None
 
-class CarNamespace(BaseNamespace):
-
-    def on_connect(self):
-        print('[Connected]')
-
-    def on_reconnect(self):
-        print('[Reconnected]')
-
-    def on_disconnect(self):
-        print('[Disconnected]')
-
 class Ironcar():
 	"""
 	Class of the car. Contains all the different fields, functions needed to
@@ -67,6 +58,7 @@ class Ironcar():
 
 		if not os.path.exists(MODELS_PATH):
 			os.makedirs(MODELS_PATH)
+
 
 		self.mode = 'resting'
 		self.started = False #If True, car will move, if False car won't move.
@@ -87,18 +79,10 @@ class Ironcar():
 		with open(COMMANDS_JSON_FILE) as json_file:
 			self.commands = json.load(json_file)
 
-
-		self.socketIO = None
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
 		
 		
-
-	def connect_start_cam(self):
-		self.socketIO_def = SocketIO('http://localhost', 5000, wait_for_connection=False)
-		self.socketIO = self.socketIO_def.define(CarNamespace, '/car')
-		
-		print('try connect')
 
 	def picture(self):
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
@@ -175,12 +159,12 @@ class Ironcar():
 		"""
 		Saves the image of the picamera with the right labels of dir and gas.
 		"""
-		image_name = os.path.join(self.save_folder, 'frame_' + str(self.n_img) + '_gas_' +
+		image_name = os.path.join(save_folder, 'frame_' + str(self.n_img) + '_gas_' +
 								  str(self.curr_gas) + '_dir_' + str(self.curr_dir) +
 								  '_' + '.jpg')
 		img_arr = np.array(img[80:, :, :], copy=True)
 		scipy.misc.imsave(image_name, img_arr)
-		n_img += 1
+		self.n_img += 1
 
 	def default_call(self, img, prediction):
 		"""
@@ -297,14 +281,6 @@ class Ironcar():
 		This loop will be executed in a separate thread.
 		"""
 
-		if self.socketIO == None:
-			try:
-				self.connect_start_cam()
-			except:
-				print('no socket')
-		else:
-			print('socketIO not none')
-
 		try:
 			cam = picamera.PiCamera(framerate=FPS)
 		except Exception as e:
@@ -315,7 +291,7 @@ class Ironcar():
 
 		cam.resolution = CAM_RESOLUTION
 		cam_output = picamera.array.PiRGBArray(cam, size=CAM_RESOLUTION)
-		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
+		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True) 
 
 		for f in stream:
 			img_arr = f.array
@@ -329,8 +305,16 @@ class Ironcar():
 				image_name = os.path.join(STREAM_PATH, 'image_stream_{}_{}.jpg'.format(str_n, index_class))
 				self.save_number += 1
 				scipy.misc.imsave(image_name, img_arr)
-				# TODO emit base 64 not image
-				self.socketIO.emit(image_name)
+				
+				# TODO Improve / this is quick n dirty
+
+				img_arr = PIL.Image.fromarray(img_arr)
+
+				buffered = BytesIO()
+				img_arr.save(buffered, format="JPEG")
+				img_str = base64.b64encode(buffered.getvalue())
+
+				socketio.emit('picture_stream', {'image': True, 'buffer': img_str, 'index': '3'}, namespace='/car')
 
 			cam_output.truncate(0)
 
