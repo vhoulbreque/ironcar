@@ -42,8 +42,6 @@ save_folder = os.path.join('datasets/', str(ct))
 if not os.path.exists(save_folder):
 	os.makedirs(save_folder)
 
-print('Saving images in {}'.format(save_folder))
-
 try:
 	# PWM setup
 	pwm = Adafruit_PCA9685.PCA9685()
@@ -89,8 +87,8 @@ class Ironcar():
 	def picture(self):
 		# TODO this function won't work as expected if streaming mode is off.
 		# This function should take its own picture. 
+		# streaming mode not saving pictures anymore. Fix this function
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
-		print("pictures : ", pictures)
 		if len(pictures):
 			p = pictures[-1]
 			return os.path.join(STREAM_PATH, p)
@@ -307,21 +305,14 @@ class Ironcar():
 			self.mode_function(img_arr, prediction)
 
 			if self.streaming_state:
-				str_n = '0'*(5-len(str(self.save_number))) + str(self.save_number)
 				index_class = prediction.index(max(prediction))
-				image_name = os.path.join(STREAM_PATH, 'image_stream_{}_{}.jpg'.format(str_n, index_class))
-				self.save_number += 1
-				scipy.misc.imsave(image_name, img_arr)
-				
-				# TODO Improve / this is quick n dirty
-
+				#Not saving img anymore to improve speed
 				img_arr = PIL.Image.fromarray(img_arr)
 
 				buffered = BytesIO()
 				img_arr.save(buffered, format="JPEG")
 				img_str = base64.b64encode(buffered.getvalue())
-
-				socketio.emit('picture_stream', {'image': True, 'buffer': img_str, 'index': index_class}, namespace='/car')
+				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class}, namespace='/car')
 
 			cam_output.truncate(0)
 
