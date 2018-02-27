@@ -312,7 +312,7 @@ class Ironcar():
 				buffered = BytesIO()
 				img_arr.save(buffered, format="JPEG")
 				img_str = base64.b64encode(buffered.getvalue())
-				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class}, namespace='/car')
+				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class, 'pred': [float(x) for x in prediction]}, namespace='/car')
 
 			cam_output.truncate(0)
 

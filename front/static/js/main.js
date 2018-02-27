@@ -160,6 +160,10 @@ socket.on('picture_stream', function(data) {
     // TODO Check
     // data = { image: true, buffer: img_base64, index: index_class}
     if (data.image) {
+
+        makeGraph(data.pred);
+
+
         $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,'+data.buffer);
 
         // TODO find acc and angle in image name
@@ -199,6 +203,38 @@ socket.on('connect', function(client) {
     $("#serverStatus").removeClass().addClass('badge badge-success');
     $("#serverStatus").text('Connected');
 });
+
+
+var width = 400,
+    height = 80;
+
+var y = d3.scaleLinear()
+    .range([height, 0]);
+
+var chart = d3.select(".chart")
+    .attr("width", width)
+    .attr("height", height);
+
+function makeGraph(data){
+    y.domain([0, d3.max(data, function(d) { return d; })]);
+
+    var barWidth = width / data.length;
+
+    var bar = chart.selectAll("g")
+    .remove()
+      .data(data)
+    .enter().append("g")
+      .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+
+    bar.append("rect")
+      .attr("y", function(d) { return y(d); })
+      .attr("height", function(d) { return height - y(d); })
+      .attr("width", barWidth - 1);
+}
+
+makeGraph([0,0,1,0,0]);
+
+
 
 // TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();
