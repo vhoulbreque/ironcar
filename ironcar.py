@@ -138,7 +138,7 @@ class Ironcar():
 		"""
 		index_class = prediction.index(max(prediction))
 		local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-		local_gas = get_gas_from_dir(curr_dir) * max_speed_rate
+		local_gas = self.get_gas_from_dir(curr_dir) * max_speed_rate
 
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight']))
 
