@@ -1,7 +1,8 @@
-var socket = io.connect();
+var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
 
 $(document).ready( function() {
     $('#model-group').hide();
+    $('#status').hide();
     $('#control-group').show();
 });
 
@@ -16,7 +17,7 @@ $("[data-mode]").click(function(event) {
     $("[data-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
     console.log(mode);
-    socket.emit("modeSwitched", mode);
+    socket.emit("mode_update", mode);
 
     if (mode == 'training') {
         $('#model-group').hide();
@@ -62,14 +63,11 @@ function handle(e) {
 
 function maxSpeedUdate(){
     var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
-    document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + newMaxSpeed + "%";
-    socket.emit("maxSpeed", newMaxSpeed / 100.);
+    socket.emit("max_speed_update", newMaxSpeed / 100.);
 }
 
-// update the current max speed
-socket.on('maxSpeedUpdate', function(maxSpeed){
-    document.getElementById("maxSpeed").innerHTML = "Max speed limit: " + Math.round(maxSpeed * 100) + "%";
-    document.getElementById("maxSpeedSlider").value = maxSpeed * 100;
+socket.on('max_speed_update_callback', function(data){
+    $("#maxSpeed").text("Max speed limit: " + Math.round(data.speed*100) + "%");
 });
 
 
@@ -81,9 +79,9 @@ $("#starter").click(function( event ) {
   socket.emit('starter');
 });
 
-socket.on('starterUpdate', function(data){
+socket.on('starter_switch', function(data){
     var state = 'Stop';
-    if (data == "stopped"){
+    if (data.activated == false){
         state = 'Start';
         $('[data-mode').prop("disabled",false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
@@ -100,14 +98,13 @@ socket.on('starterUpdate', function(data){
 
 $("#camera").click(function(event) {
     event.preventDefault();
-    socket.emit('streamUpdate');
-    // TODO might be better to handle this in the callback bellow as far the start button
+    socket.emit('streaming_starter');
 });
 
-socket.on('stream', function(data) {
+socket.on('stream_switch', function(data) {
     state = "Stop camera";
 
-    if (data == "stopped"){
+    if (data.activated == false){
         state = "Start camera";
         $("#camera").removeClass('btn-danger').addClass('btn-info');
         $('#dirline').attr('visibility', 'hidden');
@@ -123,26 +120,9 @@ socket.on('stream', function(data) {
 
 $("#take-picture").click(function(event) {
     event.preventDefault();
-    socket.emit('takePicture');
+    window.open('/picture','_blank');
 });
 
-socket.on('picture', function(data) {
-    console.log('PICTURE RECEIVED');
-    if (data.image) {
-
-        // Simulate clicking to download
-        var a = $('<a>',{
-            text: 'text',
-            title: 'title',
-            href: 'data:image/jpeg;base64,' + data.buffer,
-            download: 'filename.jpg'
-        }).appendTo('body').click()
-
-        a[0].click();
-        a.remove();
-
-    }
-});
 
 // -------- AUTOPILOT MODEL -----------
 
@@ -175,12 +155,86 @@ socket.on("model_update", function(modelSelected){
     mySelect.selectedIndex = modelIndex;
 });
 
+
+socket.on('picture_stream', function(data) {
+    // TODO Check
+    // data = { image: true, buffer: img_base64, index: index_class}
+    if (data.image) {
+
+        makeGraph(data.pred);
+
+
+        $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,'+data.buffer);
+
+        // TODO find acc and angle in image name
+        // TODO verify if correct. Here we assert many things
+        var steer_to_arrow = ['35','80','125','150','175'];
+        if (steer_to_arrow == '-1') {
+            $('#dirline').attr('visibility', 'hidden');
+        } else {
+            $('#dirline').attr('visibility', 'visible');
+            $('#dirline').attr('x2', steer_to_arrow[data.index]);
+        }
+        $('.start').hide();
+        $('.stop').show();
+    }
+});
+
 // -------- USER INFO -----------
 
 // Message to the user
-socket.on('msg2user', function(message){
-    $("#Status").text(message);
+socket.on('msg2user', function(data){
+    // TODO hide / show box + change color for success / warning / ...
+    // Format {'type': 'type', 'msg': 'message'}
+    // type is a bootstrap alert style type :
+    // primary, secondary, success, danger, warning, info, light, dark, link
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    $("#status").show();
+    $("#status").removeClass().addClass('alert alert-'+data.type);
+    $("#status").text(data.msg);
+});
+
+socket.on('disconnect', function() {
+    $("#serverStatus").removeClass().addClass('badge badge-danger');
+    $("#serverStatus").text('Connection lost !');
+});
+
+socket.on('connect', function(client) {
+    $("#serverStatus").removeClass().addClass('badge badge-success');
+    $("#serverStatus").text('Connected');
 });
 
 
-socket.emit('clientLoadedPage', true);
+var width = 400,
+    height = 80;
+
+var y = d3.scaleLinear()
+    .range([height, 0]);
+
+var chart = d3.select(".chart")
+    .attr("width", width)
+    .attr("height", height);
+
+function makeGraph(data){
+    y.domain([0, d3.max(data, function(d) { return d; })]);
+
+    var barWidth = width / data.length;
+
+    var bar = chart.selectAll("g")
+    .remove()
+      .data(data)
+    .enter().append("g")
+      .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+
+    bar.append("rect")
+      .attr("y", function(d) { return y(d); })
+      .attr("height", function(d) { return height - y(d); })
+      .attr("width", barWidth - 1);
+}
+
+makeGraph([0,0,1,0,0]);
+
+
+
+// TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
+socket = io();
