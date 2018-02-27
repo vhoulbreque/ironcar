@@ -36,7 +36,7 @@ FPS = 60
 CAM_RESOLUTION = (250, 150)
 COMMANDS_JSON_FILE = 'commands.json'
 
-ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
 save_folder = os.path.join('datasets/', str(ct))
 
 if not os.path.exists(save_folder):
