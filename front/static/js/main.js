@@ -164,7 +164,7 @@ socket.on('picture_stream', function(data) {
 
         // TODO find acc and angle in image name
         // TODO verify if correct. Here we assert many things
-        var steer_to_arrow = ['35','80','-1','150','175'];
+        var steer_to_arrow = ['35','80','125','150','175'];
         if (steer_to_arrow == '-1') {
             $('#dirline').attr('visibility', 'hidden');
         } else {
