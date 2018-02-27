@@ -44,29 +44,22 @@ car hardware (motors, camera  and other potential sensors if you want to add any
 
 
 ### On the Raspberry Pi
-Two programs are to be launched on the raspi. You can use `screen` if you don't want to carry a laptop. Those two programs can be run as daemon if you really don't want to use a laptop.
 
-* server node: 
+* Server node + IronCar controller: 
 ```
-$ node car_server.js
+$ python3 main.py
 ``` 
-This will launch the node server. By default, it runs on 
-the raspi localhost on the port 8000. 
-* python client: 
-```
-$ python3 ironcar_master.py
-``` 
-This will launch the python client that directly
-controls the car and takes commmands from the node server.
 
 ### On the laptop
 If you have a gamepad to control the car in training/direction auto and you want to control it, you can launch `controller.py` on the laptop (don't forget to change the ip to put your raspi's ip)
 You might need to change this script to adapt to your gamepad.  
 As an example, we used a xbox gamepad and listened to the left joystick for direction and `RT` trigger for the gas, `LT` to break. 
 
+You can access the control dashboard by visiting `http://YOUR_RASPI_IP:5000`.
+
 ### On any device
 The user interface is a javascript client that can be launched in any browser in theory 
-(firefox, chrome and safari have been tested). Just go to `YOUR_RASPI_IP:8000` and you should be able to choose the mode, the model, the speed, and control the car with a keyboard (the keyboard is obviously not supported if you connect from a smartphone!).
+(Firefox, Chrome and Safari have been tested). Just go to `YOUR_RASPI_IP:5000` and you should be able to choose the mode, the model, the speed, and control the car with a keyboard (the keyboard is obviously not supported if you connect from a smartphone !).
 
 ## Training
 
