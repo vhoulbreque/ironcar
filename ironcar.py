@@ -1,32 +1,29 @@
-import sys
 import os
-import PIL # TODO check if all are useful
-import time
+import PIL
 import json
 import base64
-import datetime
 import scipy.misc
 import numpy as np
 
-from app import socketio
 from io import BytesIO
+from app import socketio
 from threading import Thread
+from datetime import datetime
 
 try:
-	import picamera
-	import picamera.array
+	from picamera import PiCamera
+	from picamera.array import PiRGBArray
 except Exception as e:
 	print('Pi Camera error : ', e)
 
 try:
-	from Adafruit_BNO055 import BNO055
-	import Adafruit_PCA9685
+	from Adafruit_PCA9685 import PCA9685
 except Exception as e:
 	print('Adafruit error : ', e)
 
 try:
 	from keras.models import load_model
-	import tensorflow as tf
+	from tensorflow import get_default_graph
 except Exception as e:
 	print('ML error : ', e)
 
@@ -37,7 +34,7 @@ FPS = 60
 CAM_RESOLUTION = (250, 150)
 COMMANDS_JSON_FILE = 'commands.json'
 
-ct = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
+ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
 save_folder = os.path.join('datasets/', str(ct))
 
 if not os.path.exists(save_folder):
@@ -45,7 +42,7 @@ if not os.path.exists(save_folder):
 
 try:
 	# PWM setup
-	pwm = Adafruit_PCA9685.PCA9685()
+	pwm = PCA9685()
 	pwm.set_pwm_freq(60)
 except:
 	pwm = None
@@ -62,7 +59,7 @@ class Ironcar():
 			os.makedirs(STREAM_PATH)
 
 		self.mode = 'resting'
-		self.started = False #If True, car will move, if False car won't move.
+		self.started = False  # If True, car will move, if False car won't move.
 		self.model = None
 		self.graph = None
 		self.curr_dir = 0
@@ -83,12 +80,9 @@ class Ironcar():
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
 
-
-
 	def picture(self):
 		# TODO this function won't work as expected if streaming mode is off.
 		# This function should take its own picture.
-		# streaming mode not saving pictures anymore. Fix this function
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
 		if len(pictures):
 			p = pictures[-1]
@@ -98,7 +92,6 @@ class Ironcar():
 				socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
 				print('There is no picture to send')
 			return None
-
 
 	def gas(self, value):
 		"""
@@ -232,6 +225,12 @@ class Ironcar():
 		Triggered when a value from the keyboard/gamepad is received for dir.
 		data: intensity of the key pressed.
 		"""
+
+		if self.mode not in ['training']:  # Ignore dir commands if not in training mode
+			if self.verbose:
+				print('Ignoring dir command')
+			return
+
 		self.curr_dir = self.commands['invert_dir'] * float(data)
 		if self.curr_dir == 0:
 			new_value = self.commands['straight']
@@ -244,6 +243,12 @@ class Ironcar():
 		Triggered when a value from the keyboard/gamepad is received for gas.
 		data: intensity of the key pressed.
 		"""
+
+		if self.mode not in ['training', 'dirauto']:  # Ignore gas commands if not in training/dirauto mode
+			if self.verbose:
+				print('Ignoring gas command')
+			return
+
 		self.curr_gas = float(data) * self.max_speed_rate
 
 		if self.curr_gas < 0:
@@ -291,7 +296,7 @@ class Ironcar():
 		"""
 
 		try:
-			cam = picamera.PiCamera(framerate=FPS)
+			cam = PiCamera(framerate=FPS)
 		except Exception as e:
 			# TODO improve
 			if self.verbose:
@@ -299,7 +304,7 @@ class Ironcar():
 			return
 
 		cam.resolution = CAM_RESOLUTION
-		cam_output = picamera.array.PiRGBArray(cam, size=CAM_RESOLUTION)
+		cam_output = PiRGBArray(cam, size=CAM_RESOLUTION)
 		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
 
 		for f in stream:
@@ -342,7 +347,7 @@ class Ironcar():
 		try:
 			print(model_name)
 			self.model = load_model(model_name)
-			self.graph = tf.get_default_graph()
+			self.graph = get_default_graph()
 			self.current_model = model_name
 
 			self.model_loaded = True

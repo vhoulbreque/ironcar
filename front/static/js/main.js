@@ -7,6 +7,7 @@ $(document).ready( function() {
 });
 
 // -------- MODE ------
+
 $("[data-mode]").click(function(event) {
     event.preventDefault();
     var mode = $(this).data('mode');
@@ -39,6 +40,7 @@ $("[data-mode]").click(function(event) {
 
 
 // -------- KEYBOARD INPUT -----------
+
 kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
 
 function handle(e) {
@@ -159,12 +161,12 @@ socket.on("model_update", function(modelSelected){
 socket.on('picture_stream', function(data) {
     // TODO Check
     // data = { image: true, buffer: img_base64, index: index_class}
+
     if (data.image) {
 
-        makeGraph(data.pred);
+        // makeGraph(data.pred);
 
-
-        $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,'+data.buffer);
+        $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,' + data.buffer);
 
         // TODO find acc and angle in image name
         // TODO verify if correct. Here we assert many things
@@ -190,7 +192,7 @@ socket.on('msg2user', function(data){
     // primary, secondary, success, danger, warning, info, light, dark, link
     // https://getbootstrap.com/docs/4.0/components/alerts/
     $("#status").show();
-    $("#status").removeClass().addClass('alert alert-'+data.type);
+    $("#status").removeClass().addClass('alert alert-' + data.type);
     $("#status").text(data.msg);
 });
 
@@ -204,37 +206,35 @@ socket.on('connect', function(client) {
     $("#serverStatus").text('Connected');
 });
 
+//
+// var width = 400,
+//     height = 80;
 
-var width = 400,
-    height = 80;
+// var y = d3.scaleLinear()
+//     .range([height, 0]);
 
-var y = d3.scaleLinear()
-    .range([height, 0]);
+// var chart = d3.select(".chart")
+//     .attr("width", width)
+//     .attr("height", height);
 
-var chart = d3.select(".chart")
-    .attr("width", width)
-    .attr("height", height);
+// function makeGraph(data){
+//     y.domain([0, d3.max(data, function(d) { return d; })]);
+//
+//     var barWidth = width / data.length;
+//
+//     var bar = chart.selectAll("g")
+//     .remove()
+//       .data(data)
+//     .enter().append("g")
+//       .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+//
+//     bar.append("rect")
+//       .attr("y", function(d) { return y(d); })
+//       .attr("height", function(d) { return height - y(d); })
+//       .attr("width", barWidth - 1);
+// }
 
-function makeGraph(data){
-    y.domain([0, d3.max(data, function(d) { return d; })]);
-
-    var barWidth = width / data.length;
-
-    var bar = chart.selectAll("g")
-    .remove()
-      .data(data)
-    .enter().append("g")
-      .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
-
-    bar.append("rect")
-      .attr("y", function(d) { return y(d); })
-      .attr("height", function(d) { return height - y(d); })
-      .attr("width", barWidth - 1);
-}
-
-makeGraph([0,0,1,0,0]);
-
-
+// makeGraph([0,0,1,0,0]);
 
 // TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();

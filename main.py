@@ -1,6 +1,6 @@
 import socket
 
-from flask import Flask, send_from_directory, render_template, send_file
+from flask import Flask, render_template, send_file
 from app import app, socketio
 from ironcar import *
 
@@ -13,6 +13,7 @@ def main():
 	models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
 	print('SERVER : models : ', models)
 	return render_template('index.html', models=models)
+
 
 @app.route('/commands')
 def commands():
@@ -114,12 +115,16 @@ def handle_verbose(verbose):
 	print('SERVER : verbose switch')
 	ironcar.switch_verbose(verbose)
 
+
 if __name__ == '__main__':
+	
 	IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
 	PORT = 5000
+
 	print('#' * 50)
 	print('# IRONCAR SERVER')
 	print('# Go to the url: {}:{}'.format(IP, PORT))
 	print('#' * 50)
+
 	ironcar = Ironcar()
 	socketio.run(app, host='0.0.0.0')
