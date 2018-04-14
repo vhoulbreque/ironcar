@@ -1,15 +1,16 @@
 import sys
 import os
+import PIL # TODO check if all are useful
 import time
+import json
+import base64
 import datetime
 import scipy.misc
-import json
 import numpy as np
+
 from app import socketio
-import base64
 from io import BytesIO
 from threading import Thread
-import PIL # TODO check if all are useful
 
 try:
 	import picamera
@@ -130,7 +131,6 @@ class Ironcar():
 		return 0.2
 
 	def autopilot(self, img, prediction):
-		print('autopilot')
 		"""
 		Sends the pwm gas and dir values according to the prediction of the NN.
 
@@ -142,29 +142,22 @@ class Ironcar():
 		local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate
 
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight']))
-		print(self.started)
 		if self.started:
-			print('here')
 			gas_value = int(local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
-			print(gas_value)
 		else:
-			print('mmmm')
 			gas_value = self.commands['neutral']
-			print(gas_value)
 		self.gas(gas_value)
 
 	def dirauto(self, img, prediction):
 		"""
 		Set the pwm values for dir according to the prediction from the NN.
 		"""
-		print('dirauto')
 		index_class = prediction.index(max(prediction))
 
 		local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight']))
 
 	def training(self, img, prediction):
-		print('training')
 		"""
 		Saves the image of the picamera with the right labels of dir and gas.
 		"""
@@ -311,6 +304,8 @@ class Ironcar():
 
 		for f in stream:
 			img_arr = f.array
+			image_name = os.path.join(STREAM_PATH, 'capture.jpg')
+			scipy.misc.imsave(image_name, img_arr)
 
 			prediction = self.predict_from_img(img_arr)
 			self.mode_function(img_arr, prediction)
