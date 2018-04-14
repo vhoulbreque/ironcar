@@ -9,11 +9,6 @@ sudo apt-get update -y
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran -y
 sudo apt-get install libhdf5-dev -y
 
-sudo apt-get install npm -y
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-sudo apt-get install nodejs -y
-
-
 # Python
 sudo pip3 install -r requirements_raspi.txt
 
@@ -39,13 +34,8 @@ else
     python3 --version
 fi
 
-# Npm
-npm install
-
-
 sudo apt-get install -y python-smbus
 sudo apt-get install -y i2c-tools
-
 
 if grep -Fxq 'i2c-bcm2708' /etc/modules
 then
@@ -132,4 +122,3 @@ if [ "$CONT" = "y" ]; then
 else
   echo "This install needs a reboot to finish"
 fi
-
