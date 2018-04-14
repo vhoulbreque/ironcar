@@ -23,11 +23,11 @@ try:
 except Exception as e:
 	print('Adafruit error : ', e)
 
-# try:
-# 	from keras.models import load_model
-# 	import tensorflow as tf
-# except Exception as e:
-# 	print('ML error : ', e)
+try:
+	from keras.models import load_model
+	import tensorflow as tf
+except Exception as e:
+	print('ML error : ', e)
 
 
 # TODO put those variables in the commands.json file ?
@@ -130,6 +130,7 @@ class Ironcar():
 		return 0.2
 
 	def autopilot(self, img, prediction):
+		print('autopilot')
 		"""
 		Sends the pwm gas and dir values according to the prediction of the NN.
 
@@ -138,26 +139,32 @@ class Ironcar():
 		"""
 		index_class = prediction.index(max(prediction))
 		local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-		local_gas = self.get_gas_from_dir(curr_dir) * max_speed_rate
+		local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate
 
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight']))
-
-		if self.started == "started":
+		print(self.started)
+		if self.started:
+			print('here')
 			gas_value = int(local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
+			print(gas_value)
 		else:
+			print('mmmm')
 			gas_value = self.commands['neutral']
+			print(gas_value)
 		self.gas(gas_value)
 
 	def dirauto(self, img, prediction):
 		"""
 		Set the pwm values for dir according to the prediction from the NN.
 		"""
+		print('dirauto')
 		index_class = prediction.index(max(prediction))
 
 		local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight']))
 
 	def training(self, img, prediction):
+		print('training')
 		"""
 		Saves the image of the picamera with the right labels of dir and gas.
 		"""
@@ -191,6 +198,7 @@ class Ironcar():
 		self.gas(self.commands['neutral'])
 
 		if new_mode == "dirauto":
+			self.mode = 'dirauto'
 			if self.model_loaded:
 				self.mode_function = self.dirauto
 			else:
@@ -198,6 +206,7 @@ class Ironcar():
 					socketio.emit('msg2user', {'type': 'warning', 'msg': 'Model not loaded'}, namespace='/car')
 					print("model not loaded")
 		elif new_mode == "auto":
+			self.mode = 'auto'
 			if self.model_loaded:
 				self.mode_function = self.autopilot
 			else:
@@ -205,8 +214,10 @@ class Ironcar():
 					socketio.emit('msg2user', {'type': 'warning', 'msg': 'Model not loaded'}, namespace='/car')
 					print("model not loaded")
 		elif new_mode == "training":
+			self.mode = 'training'
 			self.mode_function = self.training
 		else:
+			self.mode = 'resting'
 			self.mode_function = self.default_call
 
 		# Make sure we stop even if the previous mode sent a last command before switching.
@@ -306,7 +317,6 @@ class Ironcar():
 
 			if self.streaming_state:
 				index_class = prediction.index(max(prediction))
-				#Not saving img anymore to improve speed
 				img_arr = PIL.Image.fromarray(img_arr)
 
 				buffered = BytesIO()
