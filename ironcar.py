@@ -23,11 +23,11 @@ try:
 except Exception as e:
 	print('Adafruit error : ', e)
 
-try:
-	from keras.models import load_model
-	import tensorflow as tf
-except Exception as e:
-	print('ML error : ', e)
+# try:
+# 	from keras.models import load_model
+# 	import tensorflow as tf
+# except Exception as e:
+# 	print('ML error : ', e)
 
 
 # TODO put those variables in the commands.json file ?
@@ -75,18 +75,18 @@ class Ironcar():
 
 		self.verbose = True
 		self.mode_function = self.default_call
-		
+
 		with open(COMMANDS_JSON_FILE) as json_file:
 			self.commands = json.load(json_file)
 
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
-		
-		
+
+
 
 	def picture(self):
 		# TODO this function won't work as expected if streaming mode is off.
-		# This function should take its own picture. 
+		# This function should take its own picture.
 		# streaming mode not saving pictures anymore. Fix this function
 		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
 		if len(pictures):
@@ -296,7 +296,7 @@ class Ironcar():
 
 		cam.resolution = CAM_RESOLUTION
 		cam_output = picamera.array.PiRGBArray(cam, size=CAM_RESOLUTION)
-		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True) 
+		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
 
 		for f in stream:
 			img_arr = f.array
@@ -344,7 +344,7 @@ class Ironcar():
 			self.switch_mode(self.mode)
 
 			if self.verbose:
-				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')	
+				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
 				print('The model {} has been successfully loaded'.format(self.current_model))
 		except OSError as e:
 			if self.verbose:
