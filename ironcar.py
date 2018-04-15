@@ -8,7 +8,6 @@ import numpy as np
 from io import BytesIO
 from app import socketio
 from threading import Thread
-from datetime import datetime
 
 try:
 	from picamera import PiCamera
@@ -23,14 +22,16 @@ except Exception as e:
 
 CAM_RESOLUTION = (250, 150)
 CONFIG = 'config.json'
-tensorflow = None  # For lazy imports
+get_default_graph = None  # For lazy imports
 
 try:
 	# PWM setup
 	pwm = PCA9685()
 	pwm.set_pwm_freq(60)
-except:
+except Exception as e:
+	print('pwm error : ', e)
 	pwm = None
+
 
 class Ironcar():
 	"""
@@ -299,6 +300,7 @@ class Ironcar():
 
 			if self.streaming_state:
 				index_class = prediction.index(max(prediction))
+				# Is there a numpy-only solution ?
 				img_arr = PIL.Image.fromarray(img_arr)
 
 				buffered = BytesIO()
@@ -327,8 +329,9 @@ class Ironcar():
 			return 0
 
 		try:
-			global tensorflow
-			if tensorflow is None:
+			# Only import tensorflow if needed (it's heavy)
+			global get_default_graph
+			if get_default_graph is None:
 				try:
 					from tensorflow import get_default_graph
 					from keras.models import load_model
@@ -347,7 +350,11 @@ class Ironcar():
 			if self.verbose:
 				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
 				print('The model {} has been successfully loaded'.format(self.current_model))
+
 		except OSError as e:
+			if self.verbose:
+				print('An Exception occured : ', e)
+		except Exception as e:
 			if self.verbose:
 				print('An Exception occured : ', e)
 
@@ -355,6 +362,9 @@ class Ironcar():
 		"""
 		Load the config file of the ironcar
 		"""
+
+		from datetime import datetime
+
 		with open(CONFIG) as json_file:
 			config = json.load(json_file)
 
@@ -377,6 +387,10 @@ class Ironcar():
 		return config
 
 	def switch_verbose(self, new_verbose):
+		"""
+		Switches the verbose level of the logs on the server side
+		Currently unused
+		"""
 		if self.verbose:
 			print('Switch verbose from {} to {}'.format(self.verbose, new_verbose))
 		self.verbose = new_verbose

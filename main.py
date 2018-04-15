@@ -5,7 +5,6 @@ from flask import Flask, render_template, send_file
 from app import app, socketio
 from ironcar import *
 
-CONFIG = 'config.json'
 with open(CONFIG) as json_file:
 	config = json.load(json_file)
 	MODELS_PATH = config['models_path']
@@ -23,6 +22,7 @@ def main():
 @app.route('/commands')
 def commands():
 	commands = ironcar.commands
+	print('SERVER : commands : ', commands)
 	return render_template('commands.html', commands=commands)
 
 
