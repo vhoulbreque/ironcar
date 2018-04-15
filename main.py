@@ -41,6 +41,7 @@ def picture():
 		r.headers["Expires"] = "0"
 		r.headers['Cache-Control'] = 'public, max-age=0'
 		return r
+	return None
 
 
 # ------- SOCKETS ----------
