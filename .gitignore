@@ -16,3 +16,6 @@ node_modules/*
 # Generation
 stream/*
 datasets/*
+
+# Unused configs
+config0.json

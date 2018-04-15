@@ -10,5 +10,4 @@
 	"fps": 60,
 	"datasets_path": "datasets",
 	"models_path": "./models/"
-
 }

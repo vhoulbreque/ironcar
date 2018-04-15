@@ -23,19 +23,45 @@ $("[data-mode]").click(function(event) {
     if (mode == 'training') {
         $('#model-group').hide();
         $('#control-group').show();
-        $('#starter').prop("disabled",false);
+        $('#starter').prop("disabled", false);
     }
     else if (mode == 'rest') {
         $('#model-group').hide();
         $('#control-group').hide();
-        $('#starter').prop("disabled",false);
+        $('#starter').prop("disabled", false);
     }
     else {
         $('#model-group').show();
         $('#control-group').hide();
         // TODO disable if model loaded
-        $('#starter').prop("disabled",false);
+        $('#starter').prop("disabled", false);
     }
+});
+
+// -------- COMMANDS -----------
+
+$("[data-command-reversed]").click(function(event) {
+    event.preventDefault();
+    $("[data-command-reversed]").removeClass('btn-primary');
+    $(this).toggleClass('btn-outline-primary btn-primary');
+
+    var is_reversed = ! $(this).hasClass("btn-outline-primary");
+    console.log(is_reversed);
+
+    var value = 1;
+    if (is_reversed) {
+      value = -1
+    }
+    socket.emit("command_update", {'command': 'invert_dir', 'value': value});
+});
+
+
+$("[data-command]").on('input propertychange paste', function() {
+    var command = $(this).data('command');
+    var value = $(this).val();
+    console.log(command);
+    console.log(value);
+    socket.emit("command_update", {'command': command, 'value': value});
 });
 
 
@@ -164,8 +190,6 @@ socket.on('picture_stream', function(data) {
 
     if (data.image) {
 
-        // makeGraph(data.pred);
-
         $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,' + data.buffer);
 
         // TODO find acc and angle in image name
@@ -206,35 +230,6 @@ socket.on('connect', function(client) {
     $("#serverStatus").text('Connected');
 });
 
-//
-// var width = 400,
-//     height = 80;
-
-// var y = d3.scaleLinear()
-//     .range([height, 0]);
-
-// var chart = d3.select(".chart")
-//     .attr("width", width)
-//     .attr("height", height);
-
-// function makeGraph(data){
-//     y.domain([0, d3.max(data, function(d) { return d; })]);
-//
-//     var barWidth = width / data.length;
-//
-//     var bar = chart.selectAll("g")
-//     .remove()
-//       .data(data)
-//     .enter().append("g")
-//       .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
-//
-//     bar.append("rect")
-//       .attr("y", function(d) { return y(d); })
-//       .attr("height", function(d) { return height - y(d); })
-//       .attr("width", barWidth - 1);
-// }
-
-// makeGraph([0,0,1,0,0]);
 
 // TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();

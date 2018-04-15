@@ -1,4 +1,5 @@
 import socket
+import json
 
 from flask import Flask, render_template, send_file
 from app import app, socketio
@@ -109,6 +110,36 @@ def handle_streaming():
 	print('SERVER : streaming switch')
 	state = ironcar.switch_streaming()
 	socketio.emit('stream_switch', {'activated': state}, namespace='/car') # switch it
+
+
+@socketio.on('command_update')
+def handle_config(data):
+	"""
+	To start / stop the streaming mode
+	"""
+	print('SERVER : command update')
+
+	command = data['command']
+	value = data['value']
+
+	# Modify the config file
+	with open(CONFIG) as json_file:
+		config = json.load(json_file)
+
+	if command not in config['commands']:
+		print('The command `{}` is not available in config'.format(command))
+		return
+
+	if command == 'invert_dir':
+		config['commands'][command] = int(value) * config['commands'][command]
+	else:
+		config['commands'][command] = int(value)
+
+	with open(CONFIG, 'w') as fp:
+		fp.write(json.dumps(config, indent=4))
+
+	# Load the modified config file in ironcar
+	ironcar.load_config()
 
 
 @socketio.on('verbose')

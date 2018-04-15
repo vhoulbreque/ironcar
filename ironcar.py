@@ -21,14 +21,9 @@ try:
 except Exception as e:
 	print('Adafruit error : ', e)
 
-try:
-	from tensorflow import get_default_graph
-	from keras.models import load_model
-except Exception as e:
-	print('ML error : ', e)
-
 CAM_RESOLUTION = (250, 150)
 CONFIG = 'config.json'
+tensorflow = None  # For lazy imports
 
 try:
 	# PWM setup
@@ -62,24 +57,7 @@ class Ironcar():
 		self.verbose = True
 		self.mode_function = self.default_call
 
-		with open(CONFIG) as json_file:
-			config = json.load(json_file)
-
-		self.commands = config['commands']
-
-		self.fps = config['fps']
-
-		# Folder to save the stream in training to create a dataset
-		# Only used in training mode
-		ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
-		self.save_folder = os.path.join(config['datasets_path'], str(ct))
-		if not os.path.exists(self.save_folder):
-			os.makedirs(self.save_folder)
-
-		# Folder used to save the stream when the stream is on
-		self.stream_path = config['stream_path']
-		if not os.path.exists(self.stream_path):
-			os.makedirs(self.stream_path)
+		self.load_config()
 
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
@@ -349,6 +327,15 @@ class Ironcar():
 			return 0
 
 		try:
+			global tensorflow
+			if tensorflow is None:
+				try:
+					from tensorflow import get_default_graph
+					from keras.models import load_model
+				except Exception as e:
+					print('ML error : ', e)
+					return
+
 			print(model_name)
 			self.model = load_model(model_name)
 			self.graph = get_default_graph()
@@ -363,6 +350,31 @@ class Ironcar():
 		except OSError as e:
 			if self.verbose:
 				print('An Exception occured : ', e)
+
+	def load_config(self):
+		"""
+		Load the config file of the ironcar
+		"""
+		with open(CONFIG) as json_file:
+			config = json.load(json_file)
+
+		self.commands = config['commands']
+
+		self.fps = config['fps']
+
+		# Folder to save the stream in training to create a dataset
+		# Only used in training mode
+		ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
+		self.save_folder = os.path.join(config['datasets_path'], str(ct))
+		if not os.path.exists(self.save_folder):
+			os.makedirs(self.save_folder)
+
+		# Folder used to save the stream when the stream is on
+		self.stream_path = config['stream_path']
+		if not os.path.exists(self.stream_path):
+			os.makedirs(self.stream_path)
+
+		return config
 
 	def switch_verbose(self, new_verbose):
 		if self.verbose:
