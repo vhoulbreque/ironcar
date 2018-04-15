@@ -1,11 +1,5 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="px-3 py-3 pt-md-2 pb-md-4 mx-auto text-center">
-  <div class="alert alert-warning" role="alert" id="Status">
-    PAGE UNDER CONSTRUCTION NOT WORKING YET
-  </div>
-</div>
-
 <div class="container">
 
   <div class="row">
@@ -18,7 +12,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text">Direction Pin</span>
         </div>
-        <input type="text" class="form-control" value="{{commands.direction_pin}}">
+        <input type="text" class="form-control" value="{{commands.dir_pin}}">
       </div>
       <div class="input-group mb-3">
         <div class="input-group-prepend">
@@ -33,36 +27,66 @@
     <div class="col-lg-4 mb-3">
       <h5>Steering</h5>
       <p><code>left</code>, <code>straight</code> and <code>right</code> parameters are used to send the direction order. You need to tune those values so that the Raspi sends the right PWM commands to the RC Car.</p>
+      <p>The <code>invert_dir</code> parameters defines the same commands but for reverse.</p>
     </div>
     <div class="col-lg-8 mb-3">
-      <p>
         <div id="slider-handles"></div>
-        Left : <span class="example-val" id="slider-value-left"></span><br>
-        Straight : <span class="example-val" id="slider-value-straight"></span><br>
-        Right : <span class="example-val" id="slider-value-right"></span><br>
-        </p>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Left</span>
+          </div>
+          <input type="text" class="form-control" data-command="left" value="{{commands.left}}">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Straight</span>
+          </div>
+          <input type="text" class="form-control" data-command="straight" value="{{commands.straight}}">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Right</span>
+          </div>
+          <input type="text" class="form-control" data-command="right" value="{{commands.right}}">
+        </div>
+        <div class="input-group mb-3">
+          <button type="submit" class="btn btn-outline-primary" data-command-reversed="invert_dir">Invert Direction</button>
+        </div>
     </div>
   </div>
 
   <div class="row">
     <div class="col-lg-4 mb-3">
       <h5>Gas</h5>
-      <p><code>stop</code>, <code>neutral</code> and <code>drive</code></p>
-      <p><code>drive_max</code> is the maximum amount of gas.</p>
-      <p>The <code>rev_</code> parameters defines the same commands but for reverse.</p>
+      <p><code>stop</code>, <code>neutral</code> and <code>drive</code> are used to accelerate the car. You need to tune these parameters.</p>
+      <p><code>drive_max</code> is the maximum amount of gas. Be careful, on some cars, huge values can lead to a very fast (and uncontrollable) car!</p>
     </div>
     <div class="col-lg-8 mb-3">
-      TODO
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-lg-4 mb-3">
-      <h5>t</h5>
-      <p><code>go_t</code>, <code>stop_t</code>, <code>left_t</code>, <code>right_t</code>, <code>invert_dir</code><p>
-    </div>
-    <div class="col-lg-8 mb-3">
-      TODO
+        <div id="slider-handles"></div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Stop</span>
+          </div>
+          <input type="text" class="form-control" data-command="stop" value="{{commands.stop}}">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Neutral</span>
+          </div>
+          <input type="text" class="form-control" data-command="neutral" value="{{commands.neutral}}">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Drive</span>
+          </div>
+          <input type="text" class="form-control" data-command="drive" value="{{commands.drive}}">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Drive Max</span>
+          </div>
+          <input type="text" class="form-control" data-command="drive_max" value="{{commands.drive_max}}">
+        </div>
     </div>
   </div>
 </div>

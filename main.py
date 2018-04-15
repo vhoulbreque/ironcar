@@ -1,16 +1,20 @@
 import socket
+import json
 
 from flask import Flask, render_template, send_file
 from app import app, socketio
 from ironcar import *
 
-
-MODELS_PATH = './models/'
+with open(CONFIG) as json_file:
+	config = json.load(json_file)
+	MODELS_PATH = config['models_path']
 
 # ------- WEB PAGES --------
 @app.route('/')
 def main():
-	models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
+	models = []
+	if os.path.isdir(MODELS_PATH):
+		models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
 	print('SERVER : models : ', models)
 	return render_template('index.html', models=models)
 
@@ -18,6 +22,7 @@ def main():
 @app.route('/commands')
 def commands():
 	commands = ironcar.commands
+	print('SERVER : commands : ', commands)
 	return render_template('commands.html', commands=commands)
 
 
@@ -36,6 +41,7 @@ def picture():
 		r.headers["Expires"] = "0"
 		r.headers['Cache-Control'] = 'public, max-age=0'
 		return r
+	return None
 
 
 # ------- SOCKETS ----------
@@ -107,6 +113,43 @@ def handle_streaming():
 	socketio.emit('stream_switch', {'activated': state}, namespace='/car') # switch it
 
 
+@socketio.on('command_update')
+def handle_config(data):
+	"""
+	To start / stop the streaming mode
+	"""
+	print('SERVER : command update')
+
+	command = data['command']
+	value = data['value']
+
+	# Check for wrong inputs
+	try:
+		value = int(value)
+	except Exception as e:
+		print('`{}` cannot be cast to int'.format(value))
+		return
+
+	# Modify the config file
+	with open(CONFIG) as json_file:
+		config = json.load(json_file)
+
+	if command not in config['commands']:
+		print('The command `{}` is not available in config'.format(command))
+		return
+
+	if command == 'invert_dir':
+		config['commands'][command] = int(value) * config['commands'][command]
+	else:
+		config['commands'][command] = int(value)
+
+	with open(CONFIG, 'w') as fp:
+		fp.write(json.dumps(config, indent=4))
+
+	# Load the modified config file in ironcar
+	ironcar.load_config()
+
+
 @socketio.on('verbose')
 def handle_verbose(verbose):
 	"""
@@ -117,7 +160,7 @@ def handle_verbose(verbose):
 
 
 if __name__ == '__main__':
-	
+
 	IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
 	PORT = 5000
 
