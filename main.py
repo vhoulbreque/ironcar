@@ -123,6 +123,13 @@ def handle_config(data):
 	command = data['command']
 	value = data['value']
 
+	# Check for wrong inputs
+	try:
+		value = int(value)
+	except Exception as e:
+		print('`{}` cannot be cast to int'.format(value))
+		return
+
 	# Modify the config file
 	with open(CONFIG) as json_file:
 		config = json.load(json_file)

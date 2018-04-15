@@ -1,11 +1,5 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="px-3 py-3 pt-md-2 pb-md-4 mx-auto text-center">
-  <div class="alert alert-warning" role="alert" id="Status">
-    PAGE UNDER CONSTRUCTION NOT WORKING YET
-  </div>
-</div>
-
 <div class="container">
 
   <div class="row">
@@ -56,7 +50,7 @@
           <input type="text" class="form-control" data-command="right" value="{{commands.right}}">
         </div>
         <div class="input-group mb-3">
-          <button type="submit" class="btn btn-outline-primary" data-command-reversed="invert_dir">Reversed</button>
+          <button type="submit" class="btn btn-outline-primary" data-command-reversed="invert_dir">Invert Direction</button>
         </div>
     </div>
   </div>
@@ -64,8 +58,8 @@
   <div class="row">
     <div class="col-lg-4 mb-3">
       <h5>Gas</h5>
-      <p><code>stop</code>, <code>neutral</code> and <code>drive</code></p>
-      <p><code>drive_max</code> is the maximum amount of gas.</p>
+      <p><code>stop</code>, <code>neutral</code> and <code>drive</code> are used to accelerate the car. You need to tune these parameters.</p>
+      <p><code>drive_max</code> is the maximum amount of gas. Be careful, on some cars, huge values can lead to a very fast (and uncontrollable) car!</p>
     </div>
     <div class="col-lg-8 mb-3">
         <div id="slider-handles"></div>
