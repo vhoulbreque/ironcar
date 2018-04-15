@@ -4,13 +4,17 @@ from flask import Flask, render_template, send_file
 from app import app, socketio
 from ironcar import *
 
-
-MODELS_PATH = './models/'
+CONFIG = 'config.json'
+with open(CONFIG) as json_file:
+	config = json.load(json_file)
+	MODELS_PATH = config['models_path']
 
 # ------- WEB PAGES --------
 @app.route('/')
 def main():
-	models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
+	models = []
+	if os.path.isdir(MODELS_PATH):
+		models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
 	print('SERVER : models : ', models)
 	return render_template('index.html', models=models)
 
@@ -117,7 +121,7 @@ def handle_verbose(verbose):
 
 
 if __name__ == '__main__':
-	
+
 	IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
 	PORT = 5000
 

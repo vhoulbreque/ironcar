@@ -22,23 +22,13 @@ except Exception as e:
 	print('Adafruit error : ', e)
 
 try:
-	from keras.models import load_model
 	from tensorflow import get_default_graph
+	from keras.models import load_model
 except Exception as e:
 	print('ML error : ', e)
 
-
-# TODO put those variables in the commands.json file ?
-STREAM_PATH = './stream/'
-FPS = 60
 CAM_RESOLUTION = (250, 150)
-COMMANDS_JSON_FILE = 'commands.json'
-
-ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
-save_folder = os.path.join('datasets/', str(ct))
-
-if not os.path.exists(save_folder):
-	os.makedirs(save_folder)
+CONFIG = 'config.json'
 
 try:
 	# PWM setup
@@ -55,27 +45,41 @@ class Ironcar():
 
 	def __init__(self):
 
-		if not os.path.exists(STREAM_PATH):
-			os.makedirs(STREAM_PATH)
-
 		self.mode = 'resting'
 		self.started = False  # If True, car will move, if False car won't move.
 		self.model = None
+		self.current_model = None  # Name of the model
 		self.graph = None
 		self.curr_dir = 0
 		self.curr_gas = 0
 		self.max_speed_rate = 0.5
 		self.model_loaded = False
 		self.streaming_state = False
+
 		self.n_img = 0
 		self.save_number = 0
-		self.current_model = None
 
 		self.verbose = True
 		self.mode_function = self.default_call
 
-		with open(COMMANDS_JSON_FILE) as json_file:
-			self.commands = json.load(json_file)
+		with open(CONFIG) as json_file:
+			config = json.load(json_file)
+
+		self.commands = config['commands']
+
+		self.fps = config['fps']
+
+		# Folder to save the stream in training to create a dataset
+		# Only used in training mode
+		ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
+		self.save_folder = os.path.join(config['datasets_path'], str(ct))
+		if not os.path.exists(self.save_folder):
+			os.makedirs(self.save_folder)
+
+		# Folder used to save the stream when the stream is on
+		self.stream_path = config['stream_path']
+		if not os.path.exists(self.stream_path):
+			os.makedirs(self.stream_path)
 
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
@@ -83,10 +87,10 @@ class Ironcar():
 	def picture(self):
 		# TODO this function won't work as expected if streaming mode is off.
 		# This function should take its own picture.
-		pictures = sorted([f for f in os.listdir(STREAM_PATH)])
+		pictures = sorted([f for f in os.listdir(self.stream_path)])
 		if len(pictures):
 			p = pictures[-1]
-			return os.path.join(STREAM_PATH, p)
+			return os.path.join(self.stream_path, p)
 		else:
 			if self.verbose:
 				socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
@@ -154,7 +158,7 @@ class Ironcar():
 		"""
 		Saves the image of the picamera with the right labels of dir and gas.
 		"""
-		image_name = os.path.join(save_folder, 'frame_' + str(self.n_img) + '_gas_' +
+		image_name = os.path.join(self.save_folder, 'frame_' + str(self.n_img) + '_gas_' +
 								  str(self.curr_gas) + '_dir_' + str(self.curr_dir) +
 								  '_' + '.jpg')
 		img_arr = np.array(img[80:, :, :], copy=True)
@@ -296,7 +300,7 @@ class Ironcar():
 		"""
 
 		try:
-			cam = PiCamera(framerate=FPS)
+			cam = PiCamera(framerate=self.fps)
 		except Exception as e:
 			# TODO improve
 			if self.verbose:
@@ -309,7 +313,7 @@ class Ironcar():
 
 		for f in stream:
 			img_arr = f.array
-			image_name = os.path.join(STREAM_PATH, 'capture.jpg')
+			image_name = os.path.join(self.stream_path, 'capture.jpg')
 			scipy.misc.imsave(image_name, img_arr)
 
 			prediction = self.predict_from_img(img_arr)
