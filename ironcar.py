@@ -36,16 +36,14 @@ class Ironcar():
 		self.mode_function = self.default_call
 
 		try:
-		        from Adafruit_PCA9685 import PCA9685
+			from Adafruit_PCA9685 import PCA9685
+
+			# PWM setup
+			self.pwm = PCA9685()
+			self.pwm.set_pwm_freq(60)
 		except Exception as e:
-        		print('Adafruit error : ', e)
-		try:
-        		# PWM setup
-       			self.pwm = PCA9685()
-        		self.pwm.set_pwm_freq(60)
-		except Exception as e:
-        		print('pwm error : ', e)
-        		self.pwm = None
+			print('Adafruit error : ', e)
+			self.pwm = None
 
 		self.load_config()
 
@@ -395,4 +393,3 @@ class Ironcar():
 		if self.verbose:
 			print('Switch verbose from {} to {}'.format(self.verbose, new_verbose))
 		self.verbose = new_verbose
-
