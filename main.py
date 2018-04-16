@@ -109,8 +109,8 @@ def handle_streaming():
 	To start / stop the streaming mode
 	"""
 	print('SERVER : streaming switch')
-	state = ironcar.switch_streaming()
-	socketio.emit('stream_switch', {'activated': state}, namespace='/car') # switch it
+	ironcar.switch_streaming()
+	socketio.emit('stream_switch', {'activated': ironcar.streaming_state}, namespace='/car')  # switch it
 
 
 @socketio.on('command_update')
@@ -171,3 +171,4 @@ if __name__ == '__main__':
 
 	ironcar = Ironcar()
 	socketio.run(app, host='0.0.0.0')
+

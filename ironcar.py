@@ -1,19 +1,11 @@
 import os
-import PIL
 import json
-import base64
 import scipy.misc
 import numpy as np
 
 from io import BytesIO
 from app import socketio
 from threading import Thread
-
-try:
-	from picamera import PiCamera
-	from picamera.array import PiRGBArray
-except Exception as e:
-	print('Pi Camera error : ', e)
 
 try:
 	from Adafruit_PCA9685 import PCA9685
@@ -264,19 +256,28 @@ class Ironcar():
 				pred = self.model.predict(img)
 				if self.verbose:
 					print('pred : ', pred)
-			prediction = list(pred[0])
+			pred = list(pred[0])
 		except Exception as e:
-			if self.verbose:
-				pass#print('Prediction error : '+e)
-			prediction = [0, 0, 1, 0, 0]
+			if self.verbose and self.mode in ['dirauto', 'auto']:
+				pass#print('Prediction error : ', e)
+			pred = [0, 0, 1, 0, 0]
 
-		return prediction
+		return pred
 
 	def camera_loop(self):
 		"""
 		Makes the camera take pictures and save them.
 		This loop will be executed in a separate thread.
 		"""
+
+		from base64 import b64encode
+		from PIL.Image import fromarray as PIL_convert
+
+		try:
+			from picamera import PiCamera
+			from picamera.array import PiRGBArray
+		except Exception as e:
+			print('Pi Camera error : ', e)
 
 		try:
 			cam = PiCamera(framerate=self.fps)
@@ -286,13 +287,14 @@ class Ironcar():
 				print('Cant load camera')
 			return
 
+		image_name = os.path.join(self.stream_path, 'capture.jpg')
+
 		cam.resolution = CAM_RESOLUTION
 		cam_output = PiRGBArray(cam, size=CAM_RESOLUTION)
 		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
 
 		for f in stream:
 			img_arr = f.array
-			image_name = os.path.join(self.stream_path, 'capture.jpg')
 			scipy.misc.imsave(image_name, img_arr)
 
 			prediction = self.predict_from_img(img_arr)
@@ -301,11 +303,11 @@ class Ironcar():
 			if self.streaming_state:
 				index_class = prediction.index(max(prediction))
 				# Is there a numpy-only solution ?
-				img_arr = PIL.Image.fromarray(img_arr)
+				img_arr = PIL_convert(img_arr)
 
 				buffered = BytesIO()
 				img_arr.save(buffered, format="JPEG")
-				img_str = base64.b64encode(buffered.getvalue())
+				img_str = b64encode(buffered.getvalue())
 				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class, 'pred': [float(x) for x in prediction]}, namespace='/car')
 
 			cam_output.truncate(0)
@@ -317,7 +319,6 @@ class Ironcar():
 		self.streaming_state = not self.streaming_state
 		if self.verbose:
 			print('Streaming state set to {}'.format(self.streaming_state))
-		return self.streaming_state
 
 	def select_model(self, model_name):
 		"""
@@ -326,7 +327,7 @@ class Ironcar():
 
 		if model_name == self.current_model:
 			socketio.emit('msg2user', {'type': 'info', 'msg': 'Model {} already loaded.'.format(self.current_model)}, namespace='/car')
-			return 0
+			return
 
 		try:
 			# Only import tensorflow if needed (it's heavy)
@@ -394,3 +395,4 @@ class Ironcar():
 		if self.verbose:
 			print('Switch verbose from {} to {}'.format(self.verbose, new_verbose))
 		self.verbose = new_verbose
+
