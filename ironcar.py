@@ -3,26 +3,11 @@ import json
 import scipy.misc
 import numpy as np
 
-from io import BytesIO
 from app import socketio
-from threading import Thread
 
-try:
-	from Adafruit_PCA9685 import PCA9685
-except Exception as e:
-	print('Adafruit error : ', e)
-
-CAM_RESOLUTION = (250, 150)
 CONFIG = 'config.json'
+CAM_RESOLUTION = (250, 150)
 get_default_graph = None  # For lazy imports
-
-try:
-	# PWM setup
-	pwm = PCA9685()
-	pwm.set_pwm_freq(60)
-except Exception as e:
-	print('pwm error : ', e)
-	pwm = None
 
 
 class Ironcar():
@@ -50,7 +35,21 @@ class Ironcar():
 		self.verbose = True
 		self.mode_function = self.default_call
 
+		try:
+		        from Adafruit_PCA9685 import PCA9685
+		except Exception as e:
+        		print('Adafruit error : ', e)
+		try:
+        		# PWM setup
+       			self.pwm = PCA9685()
+        		self.pwm.set_pwm_freq(60)
+		except Exception as e:
+        		print('pwm error : ', e)
+        		self.pwm = None
+
 		self.load_config()
+
+		from threading import Thread
 
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
@@ -72,8 +71,8 @@ class Ironcar():
 		"""
 		Send the pwm signal on the gas channel
 		"""
-		if pwm is not None:
-			pwm.set_pwm(self.commands['gas_pin'], 0 , value)
+		if self.pwm is not None:
+			self.pwm.set_pwm(self.commands['gas_pin'], 0 , value)
 			if self.verbose:
 				print('GAS : ', value)
 		else:
@@ -84,8 +83,8 @@ class Ironcar():
 		"""
 		Send the pwm signal on the dir channel
 		"""
-		if pwm is not None:
-			pwm.set_pwm(self.commands['dir_pin'], 0 , value)
+		if self.pwm is not None:
+			self.pwm.set_pwm(self.commands['dir_pin'], 0 , value)
 			if self.verbose:
 				print('DIR : ', value)
 		else:
@@ -270,6 +269,7 @@ class Ironcar():
 		This loop will be executed in a separate thread.
 		"""
 
+		from io import BytesIO
 		from base64 import b64encode
 		from PIL.Image import fromarray as PIL_convert
 
