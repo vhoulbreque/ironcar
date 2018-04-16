@@ -1,6 +1,5 @@
 numpy
 Adafruit_PCA9685
-Adafruit_BNO055
 picamera
 keras==1.2.0
 h5py==2.7.0
@@ -8,3 +7,4 @@ flask==0.12.2
 flask_socketio==2.9.3
 scipy==1.0.0
 Pillow==5.1.0
+
