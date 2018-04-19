@@ -35,10 +35,10 @@ class Ironcar():
 		self.verbose = True
 		self.mode_function = self.default_call
 
+		# PWM setup
 		try:
 			from Adafruit_PCA9685 import PCA9685
 
-			# PWM setup
 			self.pwm = PCA9685()
 			self.pwm.set_pwm_freq(60)
 		except Exception as e:
@@ -152,8 +152,9 @@ class Ironcar():
 		self.started = False
 		socketio.emit('starter_switch', {'activated': self.started}, namespace='/car') # Tell front we changed the mode.
 
-		# Stop the gas before switching mode
+		# Stop the gas before switching mode and reset wheel angle
 		self.gas(self.commands['neutral'])
+		self.dir(self.commands['straight'])
 
 		if new_mode == "dirauto":
 			self.mode = 'dirauto'
@@ -178,8 +179,11 @@ class Ironcar():
 			self.mode = 'resting'
 			self.mode_function = self.default_call
 
-		# Make sure we stop even if the previous mode sent a last command before switching.
+		# Make sure we stopped and reset wheel angle even if the previous mode
+		# sent a last command before switching.
 		self.gas(self.commands['neutral'])
+		self.dir(self.commands['straight'])
+
 		if self.verbose:
 			print('switched to mode : ', new_mode)
 
@@ -198,6 +202,9 @@ class Ironcar():
 		data: intensity of the key pressed.
 		"""
 
+		if not self.started:
+			return
+
 		if self.mode not in ['training']:  # Ignore dir commands if not in training mode
 			if self.verbose:
 				print('Ignoring dir command')
@@ -215,6 +222,9 @@ class Ironcar():
 		Triggered when a value from the keyboard/gamepad is received for gas.
 		data: intensity of the key pressed.
 		"""
+
+		if not self.started:
+			return
 
 		if self.mode not in ['training', 'dirauto']:  # Ignore gas commands if not in training/dirauto mode
 			if self.verbose:
