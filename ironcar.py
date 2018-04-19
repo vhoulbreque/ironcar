@@ -4,6 +4,7 @@ import scipy.misc
 import numpy as np
 
 from app import socketio
+from utils import ConfigException
 
 CONFIG = 'config.json'
 CAM_RESOLUTION = (250, 150)
@@ -35,10 +36,10 @@ class Ironcar():
 		self.verbose = True
 		self.mode_function = self.default_call
 
+		# PWM setup
 		try:
 			from Adafruit_PCA9685 import PCA9685
 
-			# PWM setup
 			self.pwm = PCA9685()
 			self.pwm.set_pwm_freq(60)
 		except Exception as e:
@@ -152,8 +153,9 @@ class Ironcar():
 		self.started = False
 		socketio.emit('starter_switch', {'activated': self.started}, namespace='/car') # Tell front we changed the mode.
 
-		# Stop the gas before switching mode
+		# Stop the gas before switching mode and reset wheel angle
 		self.gas(self.commands['neutral'])
+		self.dir(self.commands['straight'])
 
 		if new_mode == "dirauto":
 			self.mode = 'dirauto'
@@ -178,8 +180,11 @@ class Ironcar():
 			self.mode = 'resting'
 			self.mode_function = self.default_call
 
-		# Make sure we stop even if the previous mode sent a last command before switching.
+		# Make sure we stopped and reset wheel angle even if the previous mode
+		# sent a last command before switching.
 		self.gas(self.commands['neutral'])
+		self.dir(self.commands['straight'])
+
 		if self.verbose:
 			print('switched to mode : ', new_mode)
 
@@ -198,6 +203,9 @@ class Ironcar():
 		data: intensity of the key pressed.
 		"""
 
+		if not self.started:
+			return
+
 		if self.mode not in ['training']:  # Ignore dir commands if not in training mode
 			if self.verbose:
 				print('Ignoring dir command')
@@ -215,6 +223,9 @@ class Ironcar():
 		Triggered when a value from the keyboard/gamepad is received for gas.
 		data: intensity of the key pressed.
 		"""
+
+		if not self.started:
+			return
 
 		if self.mode not in ['training', 'dirauto']:  # Ignore gas commands if not in training/dirauto mode
 			if self.verbose:
@@ -362,10 +373,22 @@ class Ironcar():
 		Load the config file of the ironcar
 		"""
 
-		from datetime import datetime
+		if not os.path.isfile(CONFIG):
+			raise ConfigException('The config file `{}` does not exist'.format(CONFIG))
 
 		with open(CONFIG) as json_file:
 			config = json.load(json_file)
+
+		# Verify that the config file has the good fields
+		error_message = '{} is not present in the config file'
+		for field in ['commands', 'fps', 'datasets_path', 'stream_path', 'models_path']:
+			if field not in config:
+				raise ConfigException(error_message.format('commands'))
+
+		for field in ["dir_pin", "gas_pin", "left", "straight", "right", "stop",
+						"neutral", "drive", "drive_max", "invert_dir"]:
+			if field not in config['commands']:
+				raise ConfigException(error_message.format('[commands][{}]'.format(field)))
 
 		self.commands = config['commands']
 
@@ -373,6 +396,8 @@ class Ironcar():
 
 		# Folder to save the stream in training to create a dataset
 		# Only used in training mode
+		from datetime import datetime
+
 		ct = datetime.now().strftime('%Y_%m_%d_%H_%M')
 		self.save_folder = os.path.join(config['datasets_path'], str(ct))
 		if not os.path.exists(self.save_folder):
