@@ -1,21 +1,13 @@
 .DS_Store
-__MACOSX/*
+__MACOSX
 
 # Python
 __pycache__
 *.pyc
 
-
-# Node
-node_modules/*
-*lock.json
-
-# Javascript
-*.swp
-
 # Generation
-stream/*
-datasets/*
+stream
+datasets
 
 # Unused configs
 config0.json
