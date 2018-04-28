@@ -107,12 +107,14 @@ class Ironcar():
 		local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
 		local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate
 
-		self.dir(int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight']))
 		if self.started:
 			gas_value = int(local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
+			dir_value = int(local_dir * (self.commands['right'] - self.commands['left'])/2. + self.commands['straight'])
 		else:
 			gas_value = self.commands['neutral']
+			dir_value = self.commands['straight']
 		self.gas(gas_value)
+		self.dir(dir_value)
 
 	def dirauto(self, img, prediction):
 		"""
