@@ -307,7 +307,7 @@ class Ironcar():
 			scipy.misc.imsave(image_name, img_arr)
 
 			# Predict the direction only when needed
-			if self.mode in ['dirauto', 'auto']:
+			if self.mode in ['dirauto', 'auto'] and self.started:
 				prediction = self.predict_from_img(img_arr)
 			else:
 				prediction = [0, 0, 1, 0, 0]
