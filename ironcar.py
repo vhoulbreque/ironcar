@@ -4,7 +4,7 @@ import scipy.misc
 import numpy as np
 
 from app import socketio
-from utils import ConfigException
+from utils import ConfigException, CameraException
 
 CONFIG = 'config.json'
 CAM_RESOLUTION = (250, 150)
@@ -12,8 +12,7 @@ get_default_graph = None  # For lazy imports
 
 
 class Ironcar():
-	"""
-	Class of the car. Contains all the different fields, functions needed to
+	"""Class of the car. Contains all the different fields, functions needed to
 	control the car.
 	"""
 
@@ -43,7 +42,9 @@ class Ironcar():
 			self.pwm = PCA9685()
 			self.pwm.set_pwm_freq(60)
 		except Exception as e:
-			print('Adafruit error : ', e)
+			print('The car will not be able to move')
+			print('Are you executing this code on your laptop?')
+			print('The adafruit error: ', e)
 			self.pwm = None
 
 		self.load_config()
@@ -54,6 +55,9 @@ class Ironcar():
 		self.camera_thread.start()
 
 	def picture(self):
+		"""Takes a picture with the car's camera.
+		Sends it through a socket.
+		"""
 		# TODO this function won't work as expected if streaming mode is off.
 		# This function should take its own picture.
 		pictures = sorted([f for f in os.listdir(self.stream_path)])
@@ -61,15 +65,14 @@ class Ironcar():
 			p = pictures[-1]
 			return os.path.join(self.stream_path, p)
 		else:
+			socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
 			if self.verbose:
-				socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
 				print('There is no picture to send')
 			return None
 
 	def gas(self, value):
-		"""
-		Send the pwm signal on the gas channel
-		"""
+		"""Sends the pwm signal on the gas channel"""
+
 		if self.pwm is not None:
 			self.pwm.set_pwm(self.commands['gas_pin'], 0 , value)
 			if self.verbose:
@@ -79,9 +82,8 @@ class Ironcar():
 				print('PWM module not loaded')
 
 	def dir(self, value):
-		"""
-		Send the pwm signal on the dir channel
-		"""
+		"""Sends the pwm signal on the dir channel"""
+
 		if self.pwm is not None:
 			self.pwm.set_pwm(self.commands['dir_pin'], 0 , value)
 			if self.verbose:
@@ -91,18 +93,24 @@ class Ironcar():
 				print('PWM module not loaded')
 
 	def get_gas_from_dir(self, dir):
-		"""
-		Given the prediction of the direction by the NN, determine the gas value
+		"""Given the prediction of the direction by the NN, determines
+		the gas value
 		"""
 		return 0.2
 
-	def autopilot(self, img, prediction):
+	def default_call(self, img, prediction):
+		"""Default function call. Does nothing.
 		"""
-		Sends the pwm gas and dir values according to the prediction of the NN.
+		pass
+
+	def autopilot(self, img, prediction):
+		"""Sends the pwm gas and dir values according to the prediction of the
+		Neural Network (NN).
 
 		img: unused. But has to stay because other modes need it.
 		prediction: array of softmax
 		"""
+
 		index_class = prediction.index(max(prediction))
 		local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
 		local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate
@@ -117,34 +125,29 @@ class Ironcar():
 		self.dir(dir_value)
 
 	def dirauto(self, img, prediction):
+		"""Sets the pwm values for dir according to the prediction from the
+		Neural Network (NN).
 		"""
-		Set the pwm values for dir according to the prediction from the NN.
-		"""
-		index_class = prediction.index(max(prediction))
 
+		index_class = prediction.index(max(prediction))
 		local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
 		self.dir(int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight']))
 
 	def training(self, img, prediction):
+		"""Saves the image of the picamera with the right labels of dir
+		and gas.
 		"""
-		Saves the image of the picamera with the right labels of dir and gas.
-		"""
-		image_name = os.path.join(self.save_folder, 'frame_' + str(self.n_img) + '_gas_' +
-								  str(self.curr_gas) + '_dir_' + str(self.curr_dir) +
-								  '_' + '.jpg')
+
+		image_name = '_'.join(['frame', str(self.n_img), 'gas',
+								str(self.curr_gas), 'dir', str(self.curr_dir)])
+		image_name += '.jpg'
+		image_name = os.path.join(self.save_folder, image_name)
 		img_arr = np.array(img[80:, :, :], copy=True)
 		scipy.misc.imsave(image_name, img_arr)
 		self.n_img += 1
 
-	def default_call(self, img, prediction):
-		"""
-		Default function call. Does nothing.
-		"""
-		pass
-
 	def switch_mode(self, new_mode):
-		"""
-		Switches the mode between:
+		"""Switches the mode between:
 			- training
 			- rest
 			- dirauto
@@ -153,9 +156,9 @@ class Ironcar():
 
 		# always switch the starter to stopped when switching mode
 		self.started = False
-		socketio.emit('starter_switch', {'activated': self.started}, namespace='/car') # Tell front we changed the mode.
+		socketio.emit('starter_switch', {'activated': self.started}, namespace='/car')
 
-		# Stop the gas before switching mode and reset wheel angle
+		# Stop the gas before switching mode and reset wheel angle (safe)
 		self.gas(self.commands['neutral'])
 		self.dir(self.commands['straight'])
 
@@ -191,17 +194,16 @@ class Ironcar():
 			print('switched to mode : ', new_mode)
 
 	def on_start(self):
-		"""
-		Switch started mode between True and False.
-		"""
+		"""Switches started mode between True and False."""
+
 		self.started = not self.started
 		if self.verbose:
 			print('starter set to {}'.format(self.started))
 		return self.started
 
 	def on_dir(self, data):
-		"""
-		Triggered when a value from the keyboard/gamepad is received for dir.
+		"""Triggered when a value from the keyboard/gamepad is received for dir.
+
 		data: intensity of the key pressed.
 		"""
 
@@ -221,15 +223,16 @@ class Ironcar():
 		self.dir(new_value)
 
 	def on_gas(self, data):
-		"""
-		Triggered when a value from the keyboard/gamepad is received for gas.
+		"""Triggered when a value from the keyboard/gamepad is received for gas.
+
 		data: intensity of the key pressed.
 		"""
 
 		if not self.started:
 			return
 
-		if self.mode not in ['training', 'dirauto']:  # Ignore gas commands if not in training/dirauto mode
+		# Ignore gas commands if not in training/dirauto mode
+		if self.mode not in ['training', 'dirauto']:
 			if self.verbose:
 				print('Ignoring gas command')
 			return
@@ -245,19 +248,17 @@ class Ironcar():
 		self.gas(new_value)
 
 	def max_speed_update(self, new_max_speed):
-		"""
-		Changes the max_speed of the car.
-		"""
+		"""Changes the max_speed of the car."""
+
 		self.max_speed_rate = new_max_speed
 		if self.verbose:
 			print('The new max_speed is : ', self.max_speed_rate)
 		return self.max_speed_rate
 
 	def predict_from_img(self, img):
-		"""
-		Given the 250x150 image from the Pi Camera
-		Returns the direction predicted by the model
-		array[5] : prediction
+		"""Given the 250x150 image from the Pi Camera.
+
+		Returns the direction predicted by the model (array[5])
 		"""
 		try:
 			img = np.array([img[80:, :, :]])
@@ -268,16 +269,16 @@ class Ironcar():
 					print('pred : ', pred)
 			pred = list(pred[0])
 		except Exception as e:
+			# Don't print if the model is not relevant given the mode
 			if self.verbose and self.mode in ['dirauto', 'auto']:
-				pass#print('Prediction error : ', e)
+				print('Prediction error : ', e)
 			pred = [0, 0, 1, 0, 0]
 
 		return pred
 
 	def camera_loop(self):
-		"""
-		Makes the camera take pictures and save them.
-		This loop will be executed in a separate thread.
+		"""Makes the camera take pictures and save them.
+		This loop is executed in a separate thread.
 		"""
 
 		from io import BytesIO
@@ -293,10 +294,8 @@ class Ironcar():
 		try:
 			cam = PiCamera(framerate=self.fps)
 		except Exception as e:
-			# TODO improve
-			if self.verbose:
-				print('Cant load camera')
-			return
+			print('Exception ', e)
+			raise CameraException()
 
 		image_name = os.path.join(self.stream_path, 'capture.jpg')
 
@@ -318,7 +317,7 @@ class Ironcar():
 			if self.streaming_state:
 				index_class = prediction.index(max(prediction))
 
-				# Is there a numpy-only solution ?
+				# TODO Is there a numpy-only solution ?
 				img_arr = PIL_convert(img_arr)
 
 				buffered = BytesIO()
@@ -329,17 +328,14 @@ class Ironcar():
 			cam_output.truncate(0)
 
 	def switch_streaming(self):
-		"""
-		Switches the streaming state.
-		"""
+		"""Switches the streaming state."""
+
 		self.streaming_state = not self.streaming_state
 		if self.verbose:
 			print('Streaming state set to {}'.format(self.streaming_state))
 
 	def select_model(self, model_name):
-		"""
-		Changes the model of autopilot selected and loads it.
-		"""
+		"""Changes the model of autopilot selected and loads it."""
 
 		if model_name == self.current_model:
 			socketio.emit('msg2user', {'type': 'info', 'msg': 'Model {} already loaded.'.format(self.current_model)}, namespace='/car')
@@ -356,7 +352,9 @@ class Ironcar():
 					print('ML error : ', e)
 					return
 
-			print(model_name)
+			if self.verbose:
+				print('Selected model: ', model_name)
+
 			self.model = load_model(model_name)
 			self.graph = get_default_graph()
 			self.current_model = model_name
@@ -364,20 +362,33 @@ class Ironcar():
 			self.model_loaded = True
 			self.switch_mode(self.mode)
 
+			socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
+
 			if self.verbose:
-				socketio.emit('msg2user', {'type': 'success', 'msg': 'The model {} has been successfully loaded'.format(self.current_model)}, namespace='/car')
 				print('The model {} has been successfully loaded'.format(self.current_model))
 
-		except OSError as e:
-			if self.verbose:
-				print('An Exception occured : ', e)
 		except Exception as e:
 			if self.verbose:
 				print('An Exception occured : ', e)
 
 	def load_config(self):
-		"""
-		Load the config file of the ironcar
+		"""Loads the config file of the ironcar
+		Tests if all the necessary fields are present:
+			- 'commands'
+				- 'dir_pin'
+				- 'gas_pin'
+				- 'left'
+				- 'straight'
+				- 'right'
+				- 'stop'
+				- 'neutral'
+				- 'drive'
+				- 'drive_max'
+				- invert_dir'
+			- 'fps'
+			- 'datasets_path'
+			- 'stream_path'
+			- 'models_path'
 		"""
 
 		if not os.path.isfile(CONFIG):
@@ -390,7 +401,7 @@ class Ironcar():
 		error_message = '{} is not present in the config file'
 		for field in ['commands', 'fps', 'datasets_path', 'stream_path', 'models_path']:
 			if field not in config:
-				raise ConfigException(error_message.format('commands'))
+				raise ConfigException(error_message.format(field))
 
 		for field in ["dir_pin", "gas_pin", "left", "straight", "right", "stop",
 						"neutral", "drive", "drive_max", "invert_dir"]:
@@ -416,12 +427,3 @@ class Ironcar():
 			os.makedirs(self.stream_path)
 
 		return config
-
-	def switch_verbose(self, new_verbose):
-		"""
-		Switches the verbose level of the logs on the server side
-		Currently unused
-		"""
-		if self.verbose:
-			print('Switch verbose from {} to {}'.format(self.verbose, new_verbose))
-		self.verbose = new_verbose
