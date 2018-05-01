@@ -54,6 +54,55 @@ class Ironcar():
 		self.camera_thread = Thread(target=self.camera_loop, args=())
 		self.camera_thread.start()
 
+	def camera_loop(self):
+		"""Makes the camera take pictures and save them.
+		This loop is executed in a separate thread.
+		"""
+
+		from io import BytesIO
+		from base64 import b64encode
+		from PIL.Image import fromarray as PIL_convert
+
+		try:
+			from picamera import PiCamera
+			from picamera.array import PiRGBArray
+		except Exception as e:
+			print('Pi Camera error : ', e)
+
+		try:
+			cam = PiCamera(framerate=self.fps)
+		except Exception as e:
+			print('Exception ', e)
+			raise CameraException()
+
+		image_name = os.path.join(self.stream_path, 'capture.jpg')
+
+		cam.resolution = CAM_RESOLUTION
+		cam_output = PiRGBArray(cam, size=CAM_RESOLUTION)
+		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
+
+		for f in stream:
+			img_arr = f.array
+			img_arr = PIL_convert(img_arr)
+			img_arr.save(image_name)
+
+			# Predict the direction only when needed
+			if self.mode in ['dirauto', 'auto'] and self.started:
+				prediction = self.predict_from_img(img_arr)
+			else:
+				prediction = [0, 0, 1, 0, 0]
+			self.mode_function(img_arr, prediction)
+
+			if self.streaming_state:
+				index_class = prediction.index(max(prediction))
+
+				buffered = BytesIO()
+				img_arr.save(buffered, format="JPEG")
+				img_str = b64encode(buffered.getvalue())
+				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class, 'pred': [float(x) for x in prediction]}, namespace='/car')
+
+			cam_output.truncate(0)
+
 	def picture(self):
 		"""Sends the last picture saved by the streaming
 		through a socket.
@@ -146,8 +195,11 @@ class Ironcar():
 								str(self.curr_gas), 'dir', str(self.curr_dir)])
 		image_name += '.jpg'
 		image_name = os.path.join(self.save_folder, image_name)
+
 		img_arr = np.array(img[80:, :, :], copy=True)
-		scipy.misc.imsave(image_name, img_arr)
+		img_arr = PIL_convert(img_arr)
+		img_arr.save(image_name)
+		
 		self.n_img += 1
 
 	def switch_mode(self, new_mode):
@@ -279,55 +331,6 @@ class Ironcar():
 			pred = [0, 0, 1, 0, 0]
 
 		return pred
-
-	def camera_loop(self):
-		"""Makes the camera take pictures and save them.
-		This loop is executed in a separate thread.
-		"""
-
-		from io import BytesIO
-		from base64 import b64encode
-		from PIL.Image import fromarray as PIL_convert
-
-		try:
-			from picamera import PiCamera
-			from picamera.array import PiRGBArray
-		except Exception as e:
-			print('Pi Camera error : ', e)
-
-		try:
-			cam = PiCamera(framerate=self.fps)
-		except Exception as e:
-			print('Exception ', e)
-			raise CameraException()
-
-		image_name = os.path.join(self.stream_path, 'capture.jpg')
-
-		cam.resolution = CAM_RESOLUTION
-		cam_output = PiRGBArray(cam, size=CAM_RESOLUTION)
-		stream = cam.capture_continuous(cam_output, format="rgb", use_video_port=True)
-
-		for f in stream:
-			img_arr = f.array
-			img_arr = PIL_convert(img_arr)
-			img_arr.save(image_name)
-
-			# Predict the direction only when needed
-			if self.mode in ['dirauto', 'auto'] and self.started:
-				prediction = self.predict_from_img(img_arr)
-			else:
-				prediction = [0, 0, 1, 0, 0]
-			self.mode_function(img_arr, prediction)
-
-			if self.streaming_state:
-				index_class = prediction.index(max(prediction))
-
-				buffered = BytesIO()
-				img_arr.save(buffered, format="JPEG")
-				img_str = b64encode(buffered.getvalue())
-				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class, 'pred': [float(x) for x in prediction]}, namespace='/car')
-
-			cam_output.truncate(0)
 
 	def switch_streaming(self):
 		"""Switches the streaming state."""
