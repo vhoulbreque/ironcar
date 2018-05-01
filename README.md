@@ -21,7 +21,7 @@ You can easily setup everything on the raspi using the `install.sh` bash. To do 
 $ ./install.sh
 ```
 
-It will install *[keras](https://github.com/keras-team/keras)*, *[tensorflow](https://www.tensorflow.org/)* and some other dependencies in the requirements. This can take 10 minutes or 2-3 hours... (*scipy* is very long to install on some versions). At the end of the install, you will need to choose if you want to enable the pi camera, i2c connections and augment the swap size (which is very small by default).  
+It will install *[keras](https://github.com/keras-team/keras)*, *[tensorflow](https://www.tensorflow.org/)* and some other dependencies in the requirements. This can take 10 minutes or 1 hour... At the end of the install, you will need to choose if you want to enable the pi camera, i2c connections and augment the swap size (which is very small by default).  
 
 ### Laptop
 You don't need to install anything on your laptop: you will only use your browser to connect to the raspi.
