@@ -309,7 +309,8 @@ class Ironcar():
 
 		for f in stream:
 			img_arr = f.array
-			scipy.misc.imsave(image_name, img_arr)
+			img_arr = PIL_convert(img_arr)
+			img_arr.save(image_name)
 
 			# Predict the direction only when needed
 			if self.mode in ['dirauto', 'auto'] and self.started:
@@ -320,9 +321,6 @@ class Ironcar():
 
 			if self.streaming_state:
 				index_class = prediction.index(max(prediction))
-
-				# TODO Is there a numpy-only solution ?
-				img_arr = PIL_convert(img_arr)
 
 				buffered = BytesIO()
 				img_arr.save(buffered, format="JPEG")
