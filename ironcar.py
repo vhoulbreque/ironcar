@@ -55,12 +55,12 @@ class Ironcar():
 		self.camera_thread.start()
 
 	def picture(self):
-		"""Takes a picture with the car's camera.
-		Sends it through a socket.
+		"""Sends the last picture saved by the streaming
+		through a socket.
 		"""
-		# TODO this function won't work as expected if streaming mode is off.
-		# This function should take its own picture.
+
 		pictures = sorted([f for f in os.listdir(self.stream_path)])
+
 		if len(pictures):
 			p = pictures[-1]
 			return os.path.join(self.stream_path, p)
@@ -96,11 +96,12 @@ class Ironcar():
 		"""Given the prediction of the direction by the NN, determines
 		the gas value
 		"""
+
 		return 0.2
 
 	def default_call(self, img, prediction):
-		"""Default function call. Does nothing.
-		"""
+		"""Default function call. Does nothing."""
+
 		pass
 
 	def autopilot(self, img, prediction):
