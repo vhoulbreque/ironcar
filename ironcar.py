@@ -63,7 +63,10 @@ class Ironcar():
 
 		if len(pictures):
 			p = pictures[-1]
-			return os.path.join(self.stream_path, p)
+			picture_path = os.path.join(self.stream_path, p)
+			while os.stat(picture_path).st_size == 0:
+				pass
+			return picture_path
 		else:
 			socketio.emit('msg2user', {'type': 'warning', 'msg': 'There is no picture to send'}, namespace='/car')
 			if self.verbose:
