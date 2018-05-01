@@ -1,9 +1,9 @@
 import os
 import json
-import scipy.misc
 import numpy as np
 
 from app import socketio
+from PIL.Image import fromarray as PIL_convert
 from utils import ConfigException, CameraException
 
 CONFIG = 'config.json'
@@ -61,7 +61,6 @@ class Ironcar():
 
 		from io import BytesIO
 		from base64 import b64encode
-		from PIL.Image import fromarray as PIL_convert
 
 		try:
 			from picamera import PiCamera
@@ -83,8 +82,8 @@ class Ironcar():
 
 		for f in stream:
 			img_arr = f.array
-			img_arr = PIL_convert(img_arr)
-			img_arr.save(image_name)
+			im = PIL_convert(img_arr)
+			im.save(image_name)
 
 			# Predict the direction only when needed
 			if self.mode in ['dirauto', 'auto'] and self.started:
@@ -97,7 +96,7 @@ class Ironcar():
 				index_class = prediction.index(max(prediction))
 
 				buffered = BytesIO()
-				img_arr.save(buffered, format="JPEG")
+				im.save(buffered, format="JPEG")
 				img_str = b64encode(buffered.getvalue())
 				socketio.emit('picture_stream', {'image': True, 'buffer': img_str.decode('ascii'), 'index': index_class, 'pred': [float(x) for x in prediction]}, namespace='/car')
 
