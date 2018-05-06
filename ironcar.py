@@ -433,21 +433,21 @@ class Ironcar():
     def load_config(self):
         """Loads the config file of the ironcar
         Tests if all the necessary fields are present:
-                                                                        - 'commands'
-                                                                                                                                        - 'dir_pin'
-                                                                                                                                        - 'gas_pin'
-                                                                                                                                        - 'left'
-                                                                                                                                        - 'straight'
-                                                                                                                                        - 'right'
-                                                                                                                                        - 'stop'
-                                                                                                                                        - 'neutral'
-                                                                                                                                        - 'drive'
-                                                                                                                                        - 'drive_max'
-                                                                                                                                        - invert_dir'
-                                                                        - 'fps'
-                                                                        - 'datasets_path'
-                                                                        - 'stream_path'
-                                                                        - 'models_path'
+            - 'commands'
+            - 'dir_pin'
+            - 'gas_pin'
+            - 'left'
+            - 'straight'
+            - 'right'
+            - 'stop'
+            - 'neutral'
+            - 'drive'
+            - 'drive_max'
+            - invert_dir'
+            - 'fps'
+            - 'datasets_path'
+            - 'stream_path'
+            - 'models_path'
         """
 
         if not os.path.isfile(CONFIG):
