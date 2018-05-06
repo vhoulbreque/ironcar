@@ -67,7 +67,7 @@ class Ironcar():
             from picamera import PiCamera
             from picamera.array import PiRGBArray
         except Exception as e:
-            print('Pi Camera error : ', e)
+            print('picamera import error : ', e)
 
         try:
             cam = PiCamera(framerate=self.fps)
@@ -161,10 +161,10 @@ class Ironcar():
         prediction: array of softmax
         """
 
-        index_class = prediction.index(max(prediction))
+        if self.started:
+            index_class = prediction.index(max(prediction))
 
-        confidence_coef = 1.
-        if self.speed_mode == 'auto':
+            confidence_coef = 1.
             confidence = prediction[index_class]  # should be over 0.20
             # Confidence levels :
             # [0.2 - 0.4[ -> Low -> 30%
@@ -177,14 +177,13 @@ class Ironcar():
             else:
                 confidence_coef = 0.7
 
-        # TODO add filter on direction to avoid having spikes in direction
-        # TODO add filter on gas to avoid having spikes in speed
-        print('Confidence {}'.format(confidence_coef))
+            # TODO add filter on direction to avoid having spikes in direction
+            # TODO add filter on gas to avoid having spikes in speed
+            print('Confidence {}'.format(confidence_coef))
 
-        local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-        local_gas = self.max_speed_rate * confidence_coef
+            local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
+            local_gas = self.max_speed_rate * confidence_coef
 
-        if self.started:
             gas_value = int(
                 local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
             dir_value = int(
