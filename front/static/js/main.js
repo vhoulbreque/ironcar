@@ -3,10 +3,12 @@ var socket = io.connect('http://' + document.domain + ':' + location.port + '/ca
 $(document).ready( function() {
     $('#model-group').hide();
     $('#status').hide();
-    $('#control-group').show();
+    $('#control-group').hide();
+    $('#speed-group').hide();
+    $('#speed-limit').hide();
 });
 
-// -------- MODE ------
+// -------- CONTROL MODE ------
 
 $("[data-mode]").click(function(event) {
     event.preventDefault();
@@ -22,20 +24,52 @@ $("[data-mode]").click(function(event) {
 
     if (mode == 'training') {
         $('#model-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').show();
         $('#control-group').show();
         $('#starter').prop("disabled", false);
     }
     else if (mode == 'rest') {
         $('#model-group').hide();
         $('#control-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').hide();
         $('#starter').prop("disabled", false);
     }
     else {
         $('#model-group').show();
+        $('#speed-group').show();
         $('#control-group').hide();
+        $('#speed-limit').show();
         // TODO disable if model loaded
         $('#starter').prop("disabled", false);
     }
+});
+
+// -------- SPEED MODE ------
+
+$("[data-speed-mode]").click(function(event) {
+    event.preventDefault();
+    var mode = $(this).data('speed-mode');
+    $("[data-speed-mode]").each(function() {
+    if($(this).hasClass('btn-primary'))
+        $(this).toggleClass('btn-primary btn-outline-primary');
+    });
+    $("[data-speed-mode]").removeClass('btn-primary');
+    $(this).toggleClass('btn-outline-primary btn-primary');
+    console.log(mode);
+    socket.emit("speed_mode_update", mode);
+});
+
+// -------- MAX SPEED UPDATE -----------
+
+function maxSpeedUdate(){
+    var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
+    socket.emit("max_speed_update", newMaxSpeed / 100.);
+}
+
+socket.on('max_speed_update_callback', function(data){
+    $("#maxSpeed").text("Max speed limit: " + Math.round(data.speed*100) + "%");
 });
 
 // -------- COMMANDS -----------
@@ -86,18 +120,6 @@ function handle(e) {
     if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
 
 }
-
-// -------- MAX SPEED UPDATE -----------
-
-function maxSpeedUdate(){
-    var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
-    socket.emit("max_speed_update", newMaxSpeed / 100.);
-}
-
-socket.on('max_speed_update_callback', function(data){
-    $("#maxSpeed").text("Max speed limit: " + Math.round(data.speed*100) + "%");
-});
-
 
 // -------- STARTER -----------
 
