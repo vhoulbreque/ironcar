@@ -165,17 +165,18 @@ class Ironcar():
             index_class = prediction.index(max(prediction))
 
             confidence_coef = 1.
-            confidence = prediction[index_class]  # should be over 0.20
-            # Confidence levels :
-            # [0.2 - 0.4[ -> Low -> 30%
-            # [0.4 - 0.7[ -> Medium -> 70%
-            # [0.7 - 1.0] -> High -> 100%
-            if confidence < 0.4:
-                confidence_coef = 0.3
-            elif confidence >= 0.7:
-                confidence_coef = 1.
-            else:
-                confidence_coef = 0.7
+            if self.speed_mode == 'auto':
+                confidence = prediction[index_class]  # should be over 0.20
+                # Confidence levels :
+                # [0.2 - 0.4[ -> Low -> 30%
+                # [0.4 - 0.7[ -> Medium -> 70%
+                # [0.7 - 1.0] -> High -> 100%
+                if confidence < 0.4:
+                    confidence_coef = 0.3
+                elif confidence >= 0.7:
+                    confidence_coef = 1.
+                else:
+                    confidence_coef = 0.7
 
             # TODO add filter on direction to avoid having spikes in direction
             # TODO add filter on gas to avoid having spikes in speed
@@ -202,8 +203,12 @@ class Ironcar():
 
         index_class = prediction.index(max(prediction))
         local_dir = -1 + 2 * float(index_class) / float(len(prediction) - 1)
-        self.dir(
-            int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight']))
+
+        if self.started:
+            dir_value = int(local_dir * (self.commands['right'] - self.commands['left']) / 2. + self.commands['straight'])
+        else:
+            dir_value = self.commands['straight']
+        self.dir(dir_value)
 
     def training(self, img, prediction):
         """Saves the image of the picamera with the right labels of dir
