@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6 mb-3">
+        <h2>Car mode 🏎️</h2>
+        <p>
+            You can select differents car modes to control your car.
+        </p>
+
+        <h4>Training 🏋️</h4>
+        <p>
+            This mode lets you control your car using your computer keyboard. While you drive your car, it will save labelled pictures locally so that you can generate a dataset of your circuit.
+        </p>
+
+        <h4>Autopilot</h4>
+        <p>
+            To enable autopilot, you will need to select an load a model on your Raspberry Pi. Once the model is loaded, you can start your car and it will drive by itself !
+        </p>
+
+        <h4>Direction auto 💡</h4>
+        <p>
+            Use this mode to control automaticaly the steering of the car.
+        </p>
+
+        <h4>Rest 💤</h4>
+        <p>
+            Stops the car.
+        </p>
+    </div>
+    <div class="col-lg-6 mb-3">
+        <h2>Speed mode ⚡</h2>
+        <p>
+            Depending on the car mode, you will have the ability to chose a speed mode for your car, giving you more control on it. Whichever speed mode you select, you will always have the ability to chose the
+            max speed limit.
+        </p>
+
+        <h4>Constant ➡️</h4>
+        <p>
+            Your car will drive at a constant speed.
+        </p>
+
+        <h4>Auto</h4>
+        <p>
+            ⚠️ <em>Not working yet</em><br/>
+            This mode will adjust the speed depending on the confidence of the car on its prediction. The more confident a prediction is, the faster it will go.
+            If a prediction is not confident (low score), then, the car will slow.
+        </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

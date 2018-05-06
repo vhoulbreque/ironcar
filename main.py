@@ -32,6 +32,12 @@ def commands():
     return render_template('commands.html', commands=commands)
 
 
+@app.route('/help')
+def help():
+    """Display a help page"""
+    return render_template('help.html')
+
+
 @app.route('/picture')
 def picture():
     """Takes a picture, saves it, and sends it to the client"""
