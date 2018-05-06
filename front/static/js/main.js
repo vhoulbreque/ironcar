@@ -29,16 +29,24 @@ $("[data-mode]").click(function(event) {
         $('#control-group').show();
         $('#starter').prop("disabled", false);
     }
-    else if (mode == 'rest') {
+    else if (mode == 'resting') {
         $('#model-group').hide();
         $('#control-group').hide();
         $('#speed-group').hide();
         $('#speed-limit').hide();
         $('#starter').prop("disabled", false);
     }
-    else {
+    else if (mode == 'auto') {
         $('#model-group').show();
         $('#speed-group').show();
+        $('#control-group').hide();
+        $('#speed-limit').show();
+        // TODO disable if model loaded
+        $('#starter').prop("disabled", false);
+    }
+    else { //Dirauto
+        $('#model-group').show();
+        $('#speed-group').hide();
         $('#control-group').hide();
         $('#speed-limit').show();
         // TODO disable if model loaded

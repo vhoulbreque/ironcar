@@ -69,9 +69,6 @@ def model_update(model):
     """Changes the machine learning model used by the car"""
 
     print('SERVER : model update: ' + model)
-
-    socketio.emit('msg2user', {'type': 'info',
-                               'msg': 'Loading model {}...'.format(model)}, namespace='/car')
     ironcar.select_model(model)
 
 
@@ -81,7 +78,16 @@ def handle_starter():
 
     print('SERVER : starter switch from {} to {}'.format(ironcar.started, not ironcar.started))
     ironcar.on_start()
-    socketio.emit('starter_switch', {'activated': ironcar.started}, namespace='/car')  # switch it
+    socketio.emit('starter_switch', {'activated': ironcar.started}, namespace='/car')
+
+
+@socketio.on('speed_mode_update')
+def speed_mode_update(speed_mode):
+    """Lets the user selects the speed mode"""
+
+    print('SERVER : speed mode received: ' + str(speed_mode))
+    ironcar.switch_speed_mode(speed_mode)
+    # TODO send a callback ?
 
 
 @socketio.on('max_speed_update')
@@ -91,7 +97,7 @@ def update_max_speed(speed):
     print('SERVER : max speed update received: ' + str(speed))
     ironcar.max_speed_update(speed)
     socketio.emit('max_speed_update_callback', {
-                  'speed': ironcar.max_speed_rate}, namespace='/car')  # switch it
+                  'speed': ironcar.max_speed_rate}, namespace='/car')
 
 
 @socketio.on('gas')
@@ -118,7 +124,7 @@ def handle_streaming():
         ironcar.streaming_state, not ironcar.streaming_state))
     ironcar.switch_streaming()
     socketio.emit('stream_switch', {'activated': ironcar.streaming_state},
-                  namespace='/car')  # switch it
+                  namespace='/car')
 
 
 @socketio.on('command_update')
