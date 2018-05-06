@@ -148,13 +148,6 @@ class Ironcar():
                 #print('PWM module not loaded')
                 print('DIR : ', value)
 
-    def get_gas_from_dir(self, dir):
-        """Given the prediction of the direction by the NN, determines
-        the gas value
-        """
-
-        return 0.2
-
     def default_call(self, img, prediction):
         """Default function call. Does nothing."""
 
@@ -189,7 +182,7 @@ class Ironcar():
         print('Confidence {}'.format(confidence_coef))
 
         local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-        local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate * confidence_coef
+        local_gas = self.max_speed_rate * confidence_coef
 
         if self.started:
             gas_value = int(
@@ -231,10 +224,10 @@ class Ironcar():
 
     def switch_mode(self, new_mode):
         """Switches the mode between:
-                                                                        - training
-                                                                        - resting
-                                                                        - dirauto
-                                                                        - auto
+                - training
+                - resting
+                - dirauto
+                - auto
         """
 
         # always switch the starter to stopped when switching mode
