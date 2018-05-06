@@ -133,7 +133,7 @@ class Ironcar():
                 print('GAS : ', value)
         else:
             if self.verbose:
-                print('PWM module not loaded')
+                #print('PWM module not loaded')
                 print('GAS : ', value)
 
     def dir(self, value):
@@ -145,7 +145,7 @@ class Ironcar():
                 print('DIR : ', value)
         else:
             if self.verbose:
-                print('PWM module not loaded')
+                #print('PWM module not loaded')
                 print('DIR : ', value)
 
     def get_gas_from_dir(self, dir):
@@ -170,7 +170,7 @@ class Ironcar():
 
         index_class = prediction.index(max(prediction))
 
-        confidence_coef = 1
+        confidence_coef = 1.
         if self.speed_mode == 'auto':
             confidence = prediction[index_class]  # should be over 0.20
             # Confidence levels :
@@ -185,7 +185,8 @@ class Ironcar():
                 confidence_coef = 0.7
 
         # TODO add filter on direction to avoid having spikes in direction
-                # TODO add filter on gas to avoid having spikes in speed
+        # TODO add filter on gas to avoid having spikes in speed
+        print('Confidence {}'.format(confidence_coef))
 
         local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
         local_gas = self.get_gas_from_dir(local_dir) * self.max_speed_rate * confidence_coef
@@ -198,6 +199,7 @@ class Ironcar():
         else:
             gas_value = self.commands['neutral']
             dir_value = self.commands['straight']
+
         self.gas(gas_value)
         self.dir(dir_value)
 
