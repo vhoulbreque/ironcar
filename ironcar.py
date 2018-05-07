@@ -164,26 +164,33 @@ class Ironcar():
         if self.started:
             index_class = prediction.index(max(prediction))
 
-            confidence_coef = 1.
-            if self.speed_mode == 'auto':
+            speed_mode_coef = 1.
+            if self.speed_mode == 'confidence':
                 confidence = prediction[index_class]  # should be over 0.20
                 # Confidence levels :
                 # [0.2 - 0.4[ -> Low -> 30%
                 # [0.4 - 0.7[ -> Medium -> 70%
                 # [0.7 - 1.0] -> High -> 100%
                 if confidence < 0.4:
-                    confidence_coef = 0.3
+                    speed_mode_coef = 0.3
                 elif confidence >= 0.7:
-                    confidence_coef = 1.
+                    speed_mode_coef = 1.
                 else:
-                    confidence_coef = 0.7
+                    speed_mode_coef = 0.7
+            elif self.speed_mode == 'auto':
+                # Angle levels :
+                # Far left/right   -> Low -> 30%
+                # Close left/right -> Medium -> 70%
+                # Straight         -> High -> 100%
+                coeffs = [0.3, 0.7, 1., 0.7, 0.3]
+                speed_mode_coef = coeffs[index_class]
 
             # TODO add filter on direction to avoid having spikes in direction
             # TODO add filter on gas to avoid having spikes in speed
-            print('Confidence {}'.format(confidence_coef))
+            print('speed_mode_coef: {}'.format(speed_mode_coef))
 
             local_dir = -1 + 2 * float(index_class)/float(len(prediction)-1)
-            local_gas = self.max_speed_rate * confidence_coef
+            local_gas = self.max_speed_rate * speed_mode_coef
 
             gas_value = int(
                 local_gas * (self.commands['drive_max'] - self.commands['drive']) + self.commands['drive'])
@@ -369,19 +376,11 @@ class Ironcar():
 
     def switch_speed_mode(self, speed_mode):
         """Changes the speed mode of the car"""
-        if speed_mode == "constant":
-            self.speed_mode = 'constant'
-            socketio.emit('msg2user', {'type': 'success',
-                                       'msg': 'Speed mode set to constant'}, namespace='/car')
-            if self.verbose:
-                print('Selected speed mode: ', speed_mode)
-        elif speed_mode == "auto":
-            self.speed_mode = "auto"
-            socketio.emit('msg2user', {'type': 'success',
-                                       'msg': 'Speed mode set to auto'}, namespace='/car')
 
-            if self.verbose:
-                print('Selected speed mode: ', speed_mode)
+        self.speed_mode = speed_mode
+        msg = 'Speed mode set to {}'.format(speed_mode)
+        socketio.emit('msg2user', {'type': 'success',
+                                   'msg': msg}, namespace='/car')
 
     def select_model(self, model_name):
         """Changes the model of autopilot selected and loads it."""
