@@ -6,12 +6,12 @@
       <form>
         <div class="form-row">
           <div class="form-group col-md-12">
-            <label for="inputEmail4">Car Mode</label><br/>
+            <label>Car Mode</label><br/>
             <div class="btn-group mr-2" role="group" aria-label="First group">
 	            <button type="submit" class="btn btn-outline-primary" data-mode="training">Training 🏋️</button>
 	            <button type="submit" class="btn btn-outline-primary" data-mode="auto">Autopilot 🧠</button>
 	            <button type="submit" class="btn btn-outline-primary" data-mode="dirauto">Direction auto 💡</button>
-	            <button type="submit" class="btn btn-outline-primary" data-mode="rest">Rest 💤</button>
+	            <button type="submit" class="btn btn-outline-primary" data-mode="resting">Rest 💤</button>
 	        	</div>
           </div>
         </div>
@@ -28,8 +28,18 @@
           <label>Control </label>
           <p><span id="control" class="oi oi-media-pause"></span></p>
         </div>
-        <div class="form-group">
-          <label for="inputAddress2" id="maxSpeed">Max speed limit: 50%</label><br/>
+        <div class="form-row" id="speed-group">
+          <div class="form-group col-md-12">
+            <label>Speed Mode</label><br/>
+            <div class="btn-group mr-2" role="group" aria-label="First group">
+	            <button type="submit" class="btn btn-primary" data-speed-mode="constant">Constant ➡️️</button>
+	            <button type="submit" class="btn btn-outline-primary" data-speed-mode="confidence">Confidence 💡</button>
+              <button type="submit" class="btn btn-outline-primary" data-speed-mode="auto">Auto 💡</button>
+	        	</div>
+          </div>
+        </div>
+        <div class="form-group" id="speed-limit">
+          <label id="maxSpeed">Max speed limit: 50%</label><br/>
           <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate();">
         </div>
         <button id="starter" class="btn btn-success btn-lg btn-block" disabled>Start</button>

@@ -1,12 +1,40 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
 
+function showAlertStatus(data) {
+    // Format {'type': 'type', 'msg': 'message'}
+    // type is a bootstrap alert style type :
+    // primary, secondary, success, danger, warning, info, light, dark, link
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    $("#status").show();
+    $("#status").removeClass().addClass('alert alert-' + data.type);
+    $("#status").text(data.msg);
+}
+
+
 $(document).ready( function() {
     $('#model-group').hide();
     $('#status').hide();
-    $('#control-group').show();
+    $('#control-group').hide();
+    $('#speed-group').hide();
+    $('#speed-limit').hide();
+
+    var pathname = window.location.pathname;
+
+    // In the commands tab, mode is training and started is True by default
+    // in order to test the different `commands` values easily
+    if (pathname == "/commands") {
+      socket.emit("mode_update", "training");
+      socket.emit("starter", true);
+      alert_data = {"type": "warning", "msg": "Training mode, started !"}
+      showAlertStatus(alert_data);
+    } else {
+      socket.emit("mode_update", "resting");
+      socket.emit("starter", false);  // Stop the car when changing page
+    }
+
 });
 
-// -------- MODE ------
+// -------- CONTROL MODE ------
 
 $("[data-mode]").click(function(event) {
     event.preventDefault();
@@ -22,20 +50,60 @@ $("[data-mode]").click(function(event) {
 
     if (mode == 'training') {
         $('#model-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').show();
         $('#control-group').show();
         $('#starter').prop("disabled", false);
     }
-    else if (mode == 'rest') {
+    else if (mode == 'resting') {
         $('#model-group').hide();
         $('#control-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').hide();
         $('#starter').prop("disabled", false);
     }
-    else {
+    else if (mode == 'auto') {
         $('#model-group').show();
+        $('#speed-group').show();
         $('#control-group').hide();
+        $('#speed-limit').show();
         // TODO disable if model loaded
         $('#starter').prop("disabled", false);
     }
+    else { //Dirauto
+        $('#model-group').show();
+        $('#speed-group').hide();
+        $('#control-group').hide();
+        $('#speed-limit').show();
+        // TODO disable if model loaded
+        $('#starter').prop("disabled", false);
+    }
+});
+
+// -------- SPEED MODE ------
+
+$("[data-speed-mode]").click(function(event) {
+    event.preventDefault();
+    var mode = $(this).data('speed-mode');
+    $("[data-speed-mode]").each(function() {
+    if($(this).hasClass('btn-primary'))
+        $(this).toggleClass('btn-primary btn-outline-primary');
+    });
+    $("[data-speed-mode]").removeClass('btn-primary');
+    $(this).toggleClass('btn-outline-primary btn-primary');
+    console.log(mode);
+    socket.emit("speed_mode_update", mode);
+});
+
+// -------- MAX SPEED UPDATE -----------
+
+function maxSpeedUdate(){
+    var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
+    socket.emit("max_speed_update", newMaxSpeed / 100.);
+}
+
+socket.on('max_speed_update_callback', function(data){
+    $("#maxSpeed").text("Max speed limit: " + Math.round(data.speed*100) + "%");
 });
 
 // -------- COMMANDS -----------
@@ -87,34 +155,22 @@ function handle(e) {
 
 }
 
-// -------- MAX SPEED UPDATE -----------
-
-function maxSpeedUdate(){
-    var newMaxSpeed = document.getElementById("maxSpeedSlider").value ;
-    socket.emit("max_speed_update", newMaxSpeed / 100.);
-}
-
-socket.on('max_speed_update_callback', function(data){
-    $("#maxSpeed").text("Max speed limit: " + Math.round(data.speed*100) + "%");
-});
-
-
 // -------- STARTER -----------
 
 $("#starter").click(function( event ) {
   event.preventDefault();
   console.log('starter');
-  socket.emit('starter');
+  socket.emit('starter', null);
 });
 
 socket.on('starter_switch', function(data){
     var state = 'Stop';
     if (data.activated == false){
         state = 'Start';
-        $('[data-mode').prop("disabled",false);
+        $('[data-mode').prop("disabled", false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
     } else {
-        $('[data-mode').prop("disabled",true);
+        $('[data-mode').prop("disabled", true);
         $("#starter").removeClass('btn-success').addClass('btn-danger');
     }
 
@@ -210,14 +266,7 @@ socket.on('picture_stream', function(data) {
 
 // Message to the user
 socket.on('msg2user', function(data){
-    // TODO hide / show box + change color for success / warning / ...
-    // Format {'type': 'type', 'msg': 'message'}
-    // type is a bootstrap alert style type :
-    // primary, secondary, success, danger, warning, info, light, dark, link
-    // https://getbootstrap.com/docs/4.0/components/alerts/
-    $("#status").show();
-    $("#status").removeClass().addClass('alert alert-' + data.type);
-    $("#status").text(data.msg);
+    showAlertStatus(data);
 });
 
 socket.on('disconnect', function() {

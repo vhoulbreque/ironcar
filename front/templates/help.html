@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6 mb-3">
+        <h2>Car mode 🏎️</h2>
+        <p>
+            You can select different car modes to control your car.
+        </p>
+
+        <h4>Training 🏋️</h4>
+        <p>
+            This mode lets you control your car using your laptop keyboard. While you drive your car, it will save labelled pictures locally so that you can generate a dataset of your circuit.
+        </p>
+
+        <h4>Autopilot</h4>
+        <p>
+            To enable autopilot, you will need to select and load a model on your Raspberry Pi. Once the model is loaded, you can start your car and it will drive by itself !
+        </p>
+
+        <h4>Direction auto 💡</h4>
+        <p>
+            Use this mode to control automatically the steering of the car. You can use the keyboard to control the acceleration of your car.
+        </p>
+
+        <h4>Rest 💤</h4>
+        <p>
+            Stops the car.
+        </p>
+    </div>
+    <div class="col-lg-6 mb-3">
+        <h2>Speed mode ⚡</h2>
+        <p>
+            Depending on the car mode, you will have the ability to chose a speed mode for your car, giving you more control on it. Whichever speed mode you select, you will always have the ability to choose the
+            max speed limit.
+        </p>
+
+        <h4>Constant ➡️</h4>
+        <p>
+            Your car will drive at a constant speed.
+        </p>
+
+        <h4>Confidence 💡</h4>
+        <p>
+            This mode will adjust the speed depending on the confidence of the car on its prediction. The more confident a prediction is, the faster it will go.
+            If the model is not confident at all (the prediction has a low score), then, the car will be slow.
+        </p>
+
+        <h4>Auto 💡</h4>
+        <p>
+            This mode will adjust the speed depending on the direction of the car. If the car turns a wide angle, the speed will be reduced. If the car turns a small angle, the speed will be greater.
+            If the car goes straight, the speed will be at its maximum allowed.
+        </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
