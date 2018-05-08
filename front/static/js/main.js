@@ -1,11 +1,37 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
 
+function showAlertStatus(data) {
+    // Format {'type': 'type', 'msg': 'message'}
+    // type is a bootstrap alert style type :
+    // primary, secondary, success, danger, warning, info, light, dark, link
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    $("#status").show();
+    $("#status").removeClass().addClass('alert alert-' + data.type);
+    $("#status").text(data.msg);
+}
+
+
 $(document).ready( function() {
     $('#model-group').hide();
     $('#status').hide();
     $('#control-group').hide();
     $('#speed-group').hide();
     $('#speed-limit').hide();
+
+    var pathname = window.location.pathname;
+
+    // In the commands tab, mode is training and started is True by default
+    // in order to test the different `commands` values easily
+    if (pathname == "/commands") {
+      socket.emit("mode_update", "training");
+      socket.emit("starter", true);
+      alert_data = {"type": "warning", "msg": "Training mode, started !"}
+      showAlertStatus(alert_data);
+    } else {
+      socket.emit("mode_update", "resting");
+      socket.emit("starter", false);  // Stop the car when changing page
+    }
+
 });
 
 // -------- CONTROL MODE ------
@@ -134,17 +160,17 @@ function handle(e) {
 $("#starter").click(function( event ) {
   event.preventDefault();
   console.log('starter');
-  socket.emit('starter');
+  socket.emit('starter', null);
 });
 
 socket.on('starter_switch', function(data){
     var state = 'Stop';
     if (data.activated == false){
         state = 'Start';
-        $('[data-mode').prop("disabled",false);
+        $('[data-mode').prop("disabled", false);
         $("#starter").removeClass('btn-danger').addClass('btn-success');
     } else {
-        $('[data-mode').prop("disabled",true);
+        $('[data-mode').prop("disabled", true);
         $("#starter").removeClass('btn-success').addClass('btn-danger');
     }
 
@@ -240,14 +266,7 @@ socket.on('picture_stream', function(data) {
 
 // Message to the user
 socket.on('msg2user', function(data){
-    // TODO hide / show box + change color for success / warning / ...
-    // Format {'type': 'type', 'msg': 'message'}
-    // type is a bootstrap alert style type :
-    // primary, secondary, success, danger, warning, info, light, dark, link
-    // https://getbootstrap.com/docs/4.0/components/alerts/
-    $("#status").show();
-    $("#status").removeClass().addClass('alert alert-' + data.type);
-    $("#status").text(data.msg);
+    showAlertStatus(data);
 });
 
 socket.on('disconnect', function() {

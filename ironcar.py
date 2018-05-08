@@ -19,7 +19,7 @@ class Ironcar():
     def __init__(self):
 
         self.mode = 'resting'  # resting, training, auto or dirauto
-        self.speed_mode = 'constant'  # constant or auto
+        self.speed_mode = 'constant'  # constant, confidence or auto
         self.started = False  # If True, car will move, if False car won't move.
         self.model = None
         self.current_model = None  # Name of the model

@@ -1,7 +1,7 @@
 import socket
 import json
 
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, send_file, jsonify
 from app import app, socketio
 from ironcar import *
 
@@ -55,6 +55,23 @@ def picture():
     return None
 
 
+@app.route('/car_state')
+def mode_update():
+    """Sends the state of the car"""
+
+    print('Sending the current state of the car')
+
+    all_state = dict()
+    all_state['mode'] = ironcar.mode
+    all_state['speed_mode'] = ironcar.speed_mode
+    all_state['started'] = ironcar.started
+    all_state['current_model'] = ironcar.current_model
+    all_state['max_speed_rate'] = ironcar.max_speed_rate
+    all_state['commands'] = ironcar.commands
+
+    return jsonify(all_state)
+
+
 # ------- SOCKETS ----------
 @socketio.on('mode_update')
 def mode_update(mode):
@@ -73,11 +90,14 @@ def model_update(model):
 
 
 @socketio.on('starter')
-def handle_starter():
+def handle_starter(value):
     """Starts/stops the car"""
 
-    print('SERVER : starter switch from {} to {}'.format(ironcar.started, not ironcar.started))
-    ironcar.on_start()
+    if value is None:
+        value = not ironcar.started
+        
+    print('SERVER : starter switch from {} to {}'.format(ironcar.started, value))
+    ironcar.started = value
     socketio.emit('starter_switch', {'activated': ironcar.started}, namespace='/car')
 
 
