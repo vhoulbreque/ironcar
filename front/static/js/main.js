@@ -45,7 +45,7 @@ $("[data-mode]").click(function(event) {
     });
     $("[data-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
-    console.log(mode);
+
     socket.emit("mode_update", mode);
 
     if (mode == 'training') {
@@ -53,6 +53,7 @@ $("[data-mode]").click(function(event) {
         $('#speed-group').hide();
         $('#speed-limit').show();
         $('#control-group').show();
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
     else if (mode == 'resting') {
@@ -60,14 +61,14 @@ $("[data-mode]").click(function(event) {
         $('#control-group').hide();
         $('#speed-group').hide();
         $('#speed-limit').hide();
-        $('#starter').prop("disabled", false);
+        $('#starter').hide();
     }
     else if (mode == 'auto') {
         $('#model-group').show();
         $('#speed-group').show();
         $('#control-group').hide();
         $('#speed-limit').show();
-        // TODO disable if model loaded
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
     else { //Dirauto
@@ -75,7 +76,7 @@ $("[data-mode]").click(function(event) {
         $('#speed-group').hide();
         $('#control-group').hide();
         $('#speed-limit').show();
-        // TODO disable if model loaded
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
 });
@@ -91,7 +92,7 @@ $("[data-speed-mode]").click(function(event) {
     });
     $("[data-speed-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
-    console.log(mode);
+
     socket.emit("speed_mode_update", mode);
 });
 
@@ -114,7 +115,6 @@ $("[data-command-reversed]").click(function(event) {
     $(this).toggleClass('btn-outline-primary btn-primary');
 
     var is_reversed = ! $(this).hasClass("btn-outline-primary");
-    console.log(is_reversed);
 
     var value = 1;
     if (is_reversed) {
@@ -127,8 +127,6 @@ $("[data-command-reversed]").click(function(event) {
 $("[data-command]").on('input propertychange paste', function() {
     var command = $(this).data('command');
     var value = $(this).val();
-    console.log(command);
-    console.log(value);
     socket.emit("command_update", {'command': command, 'value': value});
 });
 
@@ -147,7 +145,7 @@ function handle(e) {
     if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
     if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
 
-    // Directoin control
+    // Direction control
     if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-left'); socket.emit("dir", -1);}
     if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-right'); socket.emit("dir", 1);}
     if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
@@ -159,7 +157,6 @@ function handle(e) {
 
 $("#starter").click(function( event ) {
   event.preventDefault();
-  console.log('starter');
   socket.emit('starter', null);
 });
 
@@ -222,11 +219,13 @@ socket.on('new_available_model', function(modelList){
 });
 
 
-$( "#model_select" ).change(function() {
+$("#model_select").change(function() {
     var modelName = $(this).val();
-    console.log(modelName);
-    if(modelName != "Choose model...")
-        socket.emit('model_update', modelName);
+    if(modelName != "Choose model...") {
+      socket.emit('model_update', modelName);
+      $('#starter').prop("disabled", true);
+    }
+
 });
 
 socket.on("model_update", function(modelSelected){
@@ -239,17 +238,19 @@ socket.on("model_update", function(modelSelected){
     mySelect.selectedIndex = modelIndex;
 });
 
+socket.on("model_loaded", function(data) {
+    showAlertStatus(data);
+    $('#starter').prop("disabled", false);
+});
+
 
 socket.on('picture_stream', function(data) {
-    // TODO Check
     // data = { image: true, buffer: img_base64, index: index_class}
 
     if (data.image) {
 
         $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,' + data.buffer);
 
-        // TODO find acc and angle in image name
-        // TODO verify if correct. Here we assert many things
         var steer_to_arrow = ['35','80','125','150','175'];
         if (steer_to_arrow == '-1') {
             $('#dirline').attr('visibility', 'hidden');
@@ -280,5 +281,4 @@ socket.on('connect', function(client) {
 });
 
 
-// TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();
