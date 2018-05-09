@@ -53,6 +53,7 @@ $("[data-mode]").click(function(event) {
         $('#speed-group').hide();
         $('#speed-limit').show();
         $('#control-group').show();
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
     else if (mode == 'resting') {
@@ -60,7 +61,7 @@ $("[data-mode]").click(function(event) {
         $('#control-group').hide();
         $('#speed-group').hide();
         $('#speed-limit').hide();
-        $('#starter').prop("disabled", false);
+        $('#starter').hide();
     }
     else if (mode == 'auto') {
         $('#model-group').show();
@@ -68,6 +69,7 @@ $("[data-mode]").click(function(event) {
         $('#control-group').hide();
         $('#speed-limit').show();
         // TODO disable if model loaded
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
     else { //Dirauto
@@ -76,6 +78,7 @@ $("[data-mode]").click(function(event) {
         $('#control-group').hide();
         $('#speed-limit').show();
         // TODO disable if model loaded
+        $('#starter').show();
         $('#starter').prop("disabled", false);
     }
 });
@@ -147,7 +150,7 @@ function handle(e) {
     if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
     if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
 
-    // Directoin control
+    // Direction control
     if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-left'); socket.emit("dir", -1);}
     if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-right'); socket.emit("dir", 1);}
     if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
@@ -222,7 +225,7 @@ socket.on('new_available_model', function(modelList){
 });
 
 
-$( "#model_select" ).change(function() {
+$("#model_select").change(function() {
     var modelName = $(this).val();
     console.log(modelName);
     if(modelName != "Choose model...")
@@ -241,7 +244,6 @@ socket.on("model_update", function(modelSelected){
 
 
 socket.on('picture_stream', function(data) {
-    // TODO Check
     // data = { image: true, buffer: img_base64, index: index_class}
 
     if (data.image) {
@@ -280,5 +282,4 @@ socket.on('connect', function(client) {
 });
 
 
-// TODO FIX weird behavior. Sockets don't work if we remove this line at the end of the file... strange !
 socket = io();

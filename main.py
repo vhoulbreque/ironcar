@@ -17,15 +17,15 @@ def main():
 
     models = []
     if os.path.isdir(MODELS_PATH):
-        models = [os.path.join(MODELS_PATH, f)
-                  for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
+        models = [os.path.join(MODELS_PATH, f) for f in os.listdir(MODELS_PATH) if f.endswith('.hdf5')]
+
     print('SERVER : models : ', models)
     return render_template('index.html', models=models)
 
 
 @app.route('/commands')
 def commands():
-    """Switches to `commands` tab on the dashboard"""
+    """Switches to `Commands` tab on the dashboard"""
 
     commands = ironcar.commands
     print('SERVER : commands : ', commands)
@@ -34,7 +34,8 @@ def commands():
 
 @app.route('/help')
 def help():
-    """Display a help page"""
+    """Switches to `Help` tab on the dashboard"""
+
     return render_template('help.html')
 
 
@@ -46,8 +47,7 @@ def picture():
     print('path_picture : ', path_picture)
 
     if path_picture:
-        r = send_file(path_picture,
-                      as_attachment=True)
+        r = send_file(path_picture, as_attachment=True)
         r.headers["Pragma"] = "no-cache"
         r.headers["Expires"] = "0"
         r.headers['Cache-Control'] = 'public, max-age=0'
@@ -95,7 +95,7 @@ def handle_starter(value):
 
     if value is None:
         value = not ironcar.started
-        
+
     print('SERVER : starter switch from {} to {}'.format(ironcar.started, value))
     ironcar.started = value
     socketio.emit('starter_switch', {'activated': ironcar.started}, namespace='/car')
@@ -107,7 +107,9 @@ def speed_mode_update(speed_mode):
 
     print('SERVER : speed mode received: ' + str(speed_mode))
     ironcar.switch_speed_mode(speed_mode)
-    # TODO send a callback ?
+
+    msg = 'Changed the speed mode to {}'.format(speed_mode)
+    socketio.emit('msg2user', {'type': 'success', 'msg': msg}, namespace='/car')
 
 
 @socketio.on('max_speed_update')
@@ -116,6 +118,7 @@ def update_max_speed(speed):
 
     print('SERVER : max speed update received: ' + str(speed))
     ironcar.max_speed_update(speed)
+
     socketio.emit('max_speed_update_callback', {
                   'speed': ironcar.max_speed_rate}, namespace='/car')
 
@@ -140,9 +143,9 @@ def handle_dir(direction):
 def handle_streaming():
     """To start/stop the streaming mode"""
 
-    print('SERVER : streaming switch from {} to {}'.format(
-        ironcar.streaming_state, not ironcar.streaming_state))
+    print('SERVER : streaming switch from {} to {}'.format(ironcar.streaming_state, not ironcar.streaming_state))
     ironcar.switch_streaming()
+
     socketio.emit('stream_switch', {'activated': ironcar.streaming_state},
                   namespace='/car')
 
@@ -169,6 +172,13 @@ def handle_config(data):
     with open(CONFIG) as json_file:
         config = json.load(json_file)
 
+    # Save the original config file
+    base_config = 'base_config.json'
+    if not os.path.isfile(base_config):
+        with open(base_config, 'w') as fp:
+            fp.write(json.dumps(config, indent=4))
+
+    # Check for wrong command
     if command not in config['commands']:
         print('The command `{}` is not available in config'.format(command))
         return
