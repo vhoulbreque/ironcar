@@ -45,7 +45,7 @@ $("[data-mode]").click(function(event) {
     });
     $("[data-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
-    console.log(mode);
+
     socket.emit("mode_update", mode);
 
     if (mode == 'training') {
@@ -94,7 +94,7 @@ $("[data-speed-mode]").click(function(event) {
     });
     $("[data-speed-mode]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
-    console.log(mode);
+
     socket.emit("speed_mode_update", mode);
 });
 
@@ -130,8 +130,6 @@ $("[data-command-reversed]").click(function(event) {
 $("[data-command]").on('input propertychange paste', function() {
     var command = $(this).data('command');
     var value = $(this).val();
-    console.log(command);
-    console.log(value);
     socket.emit("command_update", {'command': command, 'value': value});
 });
 
@@ -162,7 +160,6 @@ function handle(e) {
 
 $("#starter").click(function( event ) {
   event.preventDefault();
-  console.log('starter');
   socket.emit('starter', null);
 });
 
@@ -227,9 +224,11 @@ socket.on('new_available_model', function(modelList){
 
 $("#model_select").change(function() {
     var modelName = $(this).val();
-    console.log(modelName);
-    if(modelName != "Choose model...")
-        socket.emit('model_update', modelName);
+    if(modelName != "Choose model...") {
+      socket.emit('model_update', modelName);
+      $('#starter').prop("disabled", true);
+    }
+
 });
 
 socket.on("model_update", function(modelSelected){
@@ -242,6 +241,11 @@ socket.on("model_update", function(modelSelected){
     mySelect.selectedIndex = modelIndex;
 });
 
+socket.on("model_loaded", function(data) {
+    showAlertStatus(data);
+    $('#starter').prop("disabled", false);
+});
+
 
 socket.on('picture_stream', function(data) {
     // data = { image: true, buffer: img_base64, index: index_class}
@@ -250,8 +254,6 @@ socket.on('picture_stream', function(data) {
 
         $('#stream_image').attr('xlink:href', 'data:image/jpeg;base64,' + data.buffer);
 
-        // TODO find acc and angle in image name
-        // TODO verify if correct. Here we assert many things
         var steer_to_arrow = ['35','80','125','150','175'];
         if (steer_to_arrow == '-1') {
             $('#dirline').attr('visibility', 'hidden');
