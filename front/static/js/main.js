@@ -68,7 +68,6 @@ $("[data-mode]").click(function(event) {
         $('#speed-group').show();
         $('#control-group').hide();
         $('#speed-limit').show();
-        // TODO disable if model loaded
         $('#starter').show();
         $('#starter').prop("disabled", false);
     }
@@ -77,7 +76,6 @@ $("[data-mode]").click(function(event) {
         $('#speed-group').hide();
         $('#control-group').hide();
         $('#speed-limit').show();
-        // TODO disable if model loaded
         $('#starter').show();
         $('#starter').prop("disabled", false);
     }
@@ -117,7 +115,6 @@ $("[data-command-reversed]").click(function(event) {
     $(this).toggleClass('btn-outline-primary btn-primary');
 
     var is_reversed = ! $(this).hasClass("btn-outline-primary");
-    console.log(is_reversed);
 
     var value = 1;
     if (is_reversed) {
