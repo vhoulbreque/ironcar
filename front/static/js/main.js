@@ -19,6 +19,7 @@ function retrieveCarState(callback) {
 
 retrieveCarState(function(result) {
     COMMANDS = result['commands'];
+
     console.log('COMMANDS : ');
     console.log(COMMANDS);
 
@@ -186,8 +187,6 @@ socket.on('max_speed_update_callback', function(data){
 // -------- COMMANDS -----------
 
 $("[data-command-reversed]").click(function(event) {
-    console.log('CLICK');
-
     event.preventDefault();
     $("[data-command-reversed]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
@@ -199,7 +198,6 @@ $("[data-command-reversed]").click(function(event) {
       value = -1
     }
 
-    console.log('VALUE : ' + value);
     socket.emit("command_update", {'command': 'invert_dir', 'value': value});
 });
 
