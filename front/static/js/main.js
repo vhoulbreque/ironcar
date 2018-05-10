@@ -11,25 +11,102 @@ function showAlertStatus(data) {
 }
 
 
-$(document).ready( function() {
-    $('#model-group').hide();
-    $('#status').hide();
-    $('#control-group').hide();
-    $('#speed-group').hide();
-    $('#speed-limit').hide();
+function retrieveCarState(callback) {
+    $.get( "/car_state", function(data) {
+        callback(data);
+    });
+}
 
-    var pathname = window.location.pathname;
+retrieveCarState(function(result) {
+    COMMANDS = result['commands'];
 
-    // In the commands tab, mode is training and started is True by default
-    // in order to test the different `commands` values easily
-    if (pathname == "/commands") {
-      socket.emit("mode_update", "training");
-      socket.emit("starter", true);
-      alert_data = {"type": "warning", "msg": "Training mode, started !"}
-      showAlertStatus(alert_data);
-    } else {
-      socket.emit("mode_update", "resting");
-      socket.emit("starter", false);  // Stop the car when changing page
+    console.log('COMMANDS : ');
+    console.log(COMMANDS);
+
+    $(document).ready( function() {
+        $('#model-group').hide();
+        $('#status').hide();
+        $('#control-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').hide();
+
+        var pathname = window.location.pathname;
+
+        // In the commands tab, mode is training and started is True by default
+        // in order to test the different `commands` values easily
+        if (pathname == "/commands") {
+          socket.emit("mode_update", "training");
+          socket.emit("starter", true);
+          alert_data = {"type": "warning", "msg": "Training mode, started !"}
+          showAlertStatus(alert_data);
+        } else {
+          socket.emit("mode_update", "resting");
+          socket.emit("starter", false);  // Stop the car when changing page
+        }
+
+    });
+
+    // Directions bar
+    var sliderDir = document.getElementById('sliderDir');
+
+    if (sliderDir) {
+
+        var left = COMMANDS['left'];
+        var straight = COMMANDS['straight'];
+        var right = COMMANDS['right'];
+
+        noUiSlider.create(sliderDir, {
+          start: [left, straight, right],
+          connect: true,
+          range: {
+            'min': 200,
+            'max': 500
+          },
+          step: 1,
+          tooltips: true
+        });
+
+        sliderDir.noUiSlider.on('update', function(values, handle, unencoded, isTap, positions) {
+            c = ['left', 'straight', 'right'];
+            for (i=0; i<values.length; i++) {
+                socket.emit("command_update", {'command': c[i], 'value': parseInt(values[i], 10)});
+            }
+        });
+    }
+
+    // Gas bar
+    var sliderGas = document.getElementById('sliderGas');
+
+    if (sliderGas) {
+        var stop = COMMANDS['stop'];
+        var neutral = COMMANDS['neutral'];
+        var drive = COMMANDS['drive'];
+        var drive_max = COMMANDS['drive_max'];
+
+        noUiSlider.create(sliderGas, {
+          start: [stop, neutral, drive, drive_max],
+          connect: true,
+          range: {
+            'min': 200,
+            'max': 430
+          },
+          step: 1,
+          tooltips: true
+        });
+
+        sliderGas.noUiSlider.on('update', function(values, handle, unencoded, isTap, positions) {
+          var stop = values[0];
+          var neutral = values[1];
+          var drive = values[2];
+          var drive_max = values[3];
+
+          commands = ['stop', 'neutral', 'drive', 'drive_max'];
+
+          for (i=0; i<values.length; i++) {
+              socket.emit("command_update", {'command': commands[i], 'value': parseInt(values[i], 10)});
+          }
+
+        });
     }
 
 });
@@ -120,6 +197,7 @@ $("[data-command-reversed]").click(function(event) {
     if (is_reversed) {
       value = -1
     }
+
     socket.emit("command_update", {'command': 'invert_dir', 'value': value});
 });
 
@@ -137,19 +215,49 @@ kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
 
 function handle(e) {
 
-    var elem = $("#control");
-
     // Gas control
-    if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-bottom'); socket.emit("gas", -1);}
-    if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-top'); socket.emit("gas", 1);}
-    if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
-    if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
+    if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlUp");
+        elem.css('color', 'red');
+        socket.emit("gas", 1);
+    }
+    if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlUp");
+        elem.css('color', 'black');
+        socket.emit("gas", 0);
+    }
+    if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlDown");
+        elem.css('color', 'red');
+        socket.emit("gas", -1);
+    }
+    if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlDown");
+        elem.css('color', 'black');
+        socket.emit("gas", 0);
+    }
 
     // Direction control
-    if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-left'); socket.emit("dir", -1);}
-    if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-right'); socket.emit("dir", 1);}
-    if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
-    if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
+    if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlLeft");
+        elem.css('color', 'red');
+        socket.emit("dir", -1);
+    }
+    if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlLeft");
+        elem.css('color', 'black');
+        socket.emit("dir", 0);
+    }
+    if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlRight");
+        elem.css('color', 'red');
+        socket.emit("dir", 1);
+    }
+    if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlRight");
+        elem.css('color', 'black');
+        socket.emit("dir", 0);
+    }
 
 }
 

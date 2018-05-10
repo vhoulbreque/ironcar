@@ -15,8 +15,10 @@
 	        	</div>
           </div>
         </div>
+
+        <!-- Display the models list -->
         <div class="form-group" id="model-group">
-          <label for="inputAddress">Model </label>
+          <label>Model </label>
           <select class="form-control" id="model_select">
               <option selected>Choose model...</option>
               {% for model in models %}
@@ -24,10 +26,30 @@
               {% endfor %}
           </select>
         </div>
-        <div class="form-group" id="control-group">
+
+        <!-- Display the pressed keys -->
+        <div id="control-group">
           <label>Control </label>
-          <p><span id="control" class="oi oi-media-pause"></span></p>
+            <p>
+               <div class="text-center">
+                 <span id="controlUp" class="oi oi-caret-top"></span><br/>
+               </div>
+               <div class="row">
+                   <div class="text-right col-lg-5">
+                     <span id="controlLeft" class="oi oi-caret-left"></span>
+                   </div>
+                   <div class="text-left col-lg-2"></div>
+                   <div class="text-left col-lg-5">
+                     <span id="controlRight" class="oi oi-caret-right"></span><br/>
+                   </div>
+               </div>
+               <div class="text-center">
+                 <span id="controlDown" class="oi oi-caret-bottom"></span>
+               </div>
+            </p>
         </div>
+
+        <!-- Display the different speed modes -->
         <div class="form-row" id="speed-group">
           <div class="form-group col-md-12">
             <label>Speed Mode</label><br/>
@@ -38,14 +60,19 @@
 	        	</div>
           </div>
         </div>
+
+        <!-- Display the max speed slider -->
         <div class="form-group" id="speed-limit">
           <label id="maxSpeed">Max speed limit: 50%</label><br/>
           <input type="range" id="maxSpeedSlider" oninput="maxSpeedUdate();">
         </div>
+
+        <!-- Display the starter button -->
         <button id="starter" class="btn btn-success btn-lg btn-block" disabled>Start</button>
       </form>
     </div>
 
+    <!-- Stream/Picture -->
     <div class="col-lg-6 text-center mb-3">
 
   		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="stream" viewBox="0 0 250 150">
@@ -58,9 +85,7 @@
   			<image id="stream_image" xlink:href="/picture" x="0" y="0" height="150px" width="250px"/>
    			<line id="dirline" x1="125" y1="110" x2="25" y2="110" stroke="#f00" stroke-width="5" marker-end="url(#arrow)" visibility="hidden"/>
   		</svg>
-
-      <!-- <svg class="chart"></svg> -->
-
+      
   		<div class="btn-group mt-1" role="group" aria-label="Basic example">
   			<button id="camera" class="btn btn-info">Start camera</button>
   			<button id="take-picture" type="button" class="btn btn-light">📸</button>
