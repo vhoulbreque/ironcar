@@ -1,4 +1,5 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
+var COMMANDS = null;
 
 function showAlertStatus(data) {
     // Format {'type': 'type', 'msg': 'message'}
@@ -11,25 +12,106 @@ function showAlertStatus(data) {
 }
 
 
-$(document).ready( function() {
-    $('#model-group').hide();
-    $('#status').hide();
-    $('#control-group').hide();
-    $('#speed-group').hide();
-    $('#speed-limit').hide();
+function retrieveCarState(callback) {
+    $.get( "/car_state", function(data) {
+        callback(data);
+    });
+}
 
-    var pathname = window.location.pathname;
+retrieveCarState(function(result) {
+    COMMANDS = result['commands'];
+    console.log('COMMANDS : ');
+    console.log(COMMANDS);
 
-    // In the commands tab, mode is training and started is True by default
-    // in order to test the different `commands` values easily
-    if (pathname == "/commands") {
-      socket.emit("mode_update", "training");
-      socket.emit("starter", true);
-      alert_data = {"type": "warning", "msg": "Training mode, started !"}
-      showAlertStatus(alert_data);
-    } else {
-      socket.emit("mode_update", "resting");
-      socket.emit("starter", false);  // Stop the car when changing page
+    $(document).ready( function() {
+        $('#model-group').hide();
+        $('#status').hide();
+        $('#control-group').hide();
+        $('#speed-group').hide();
+        $('#speed-limit').hide();
+
+        var pathname = window.location.pathname;
+
+        // In the commands tab, mode is training and started is True by default
+        // in order to test the different `commands` values easily
+        if (pathname == "/commands") {
+          socket.emit("mode_update", "training");
+          socket.emit("starter", true);
+          alert_data = {"type": "warning", "msg": "Training mode, started !"}
+          showAlertStatus(alert_data);
+        } else {
+          socket.emit("mode_update", "resting");
+          socket.emit("starter", false);  // Stop the car when changing page
+        }
+
+    });
+
+    // Directions bar
+    var sliderDir = document.getElementById('sliderDir');
+
+    if (sliderDir) {
+
+        var left = COMMANDS['left'];
+        var straight = COMMANDS['straight'];
+        var right = COMMANDS['right'];
+
+        noUiSlider.create(sliderDir, {
+          start: [left, straight, right],
+          connect: true,
+          range: {
+            'min': 200,
+            'max': 500
+          },
+          step: 1,
+          tooltips: true
+        });
+
+        sliderDir.noUiSlider.on('update', function(values, handle, unencoded, isTap, positions) {
+            c = ['left', 'straight', 'right'];
+            for (i=0; i<values.length; i++) {
+                socket.emit("command_update", {'command': c[i], 'value': parseInt(values[i], 10)});
+            }
+        });
+    }
+
+    // Gas bar
+    var sliderGas = document.getElementById('sliderGas');
+
+    if (sliderGas) {
+        var stop = COMMANDS['stop'];
+        var neutral = COMMANDS['neutral'];
+        var drive = COMMANDS['drive'];
+        var drive_max = COMMANDS['drive_max'];
+
+        noUiSlider.create(sliderGas, {
+          start: [stop, neutral, drive, drive_max],
+          connect: true,
+          range: {
+            'min': 200,
+            'max': 430
+          },
+          step: 1,
+          tooltips: true
+        });
+
+        sliderGas.noUiSlider.on('update', function(values, handle, unencoded, isTap, positions) {
+          var stop = values[0];
+          var neutral = values[1];
+          var drive = values[2];
+          var drive_max = values[3];
+
+          console.log('stop : ' + stop);
+          console.log('neutral : ' + neutral);
+          console.log('drive : ' + drive);
+          console.log('drive_max : ' + drive_max);
+
+          commands = ['stop', 'neutral', 'drive', 'drive_max'];
+
+          for (i=0; i<values.length; i++) {
+              socket.emit("command_update", {'command': commands[i], 'value': parseInt(values[i], 10)});
+          }
+
+        });
     }
 
 });
