@@ -1,5 +1,4 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/car');
-var COMMANDS = null;
 
 function showAlertStatus(data) {
     // Format {'type': 'type', 'msg': 'message'}
@@ -100,11 +99,6 @@ retrieveCarState(function(result) {
           var drive = values[2];
           var drive_max = values[3];
 
-          console.log('stop : ' + stop);
-          console.log('neutral : ' + neutral);
-          console.log('drive : ' + drive);
-          console.log('drive_max : ' + drive_max);
-
           commands = ['stop', 'neutral', 'drive', 'drive_max'];
 
           for (i=0; i<values.length; i++) {
@@ -192,6 +186,8 @@ socket.on('max_speed_update_callback', function(data){
 // -------- COMMANDS -----------
 
 $("[data-command-reversed]").click(function(event) {
+    console.log('CLICK');
+
     event.preventDefault();
     $("[data-command-reversed]").removeClass('btn-primary');
     $(this).toggleClass('btn-outline-primary btn-primary');
@@ -202,6 +198,8 @@ $("[data-command-reversed]").click(function(event) {
     if (is_reversed) {
       value = -1
     }
+
+    console.log('VALUE : ' + value);
     socket.emit("command_update", {'command': 'invert_dir', 'value': value});
 });
 

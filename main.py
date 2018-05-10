@@ -176,20 +176,17 @@ def handle_config(data):
     base_config = 'base_config.json'
     if not os.path.isfile(base_config):
         with open(base_config, 'w') as fp:
-            fp.write(json.dumps(config, indent=4))
+            fp.write(json.dumps(config, indent=4) + '\n')
 
     # Check for wrong command
     if command not in config['commands']:
         print('The command `{}` is not available in config'.format(command))
         return
 
-    if command == 'invert_dir':
-        config['commands'][command] = int(value) * config['commands'][command]
-    else:
-        config['commands'][command] = int(value)
+    config['commands'][command] = int(value)
 
     with open(CONFIG, 'w') as fp:
-        fp.write(json.dumps(config, indent=4))
+        fp.write(json.dumps(config, indent=4) + '\n')
 
     # Load the modified config file in ironcar
     ironcar.load_config()
