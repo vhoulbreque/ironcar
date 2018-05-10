@@ -133,7 +133,6 @@ class Ironcar():
                 print('GAS : ', value)
         else:
             if self.verbose:
-                #print('PWM module not loaded')
                 print('GAS : ', value)
 
     def dir(self, value):

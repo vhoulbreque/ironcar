@@ -137,19 +137,49 @@ kinput.onkeydown = kinput.onkeyup = kinput.onkeypress = handle;
 
 function handle(e) {
 
-    var elem = $("#control");
-
     // Gas control
-    if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-bottom'); socket.emit("gas", -1);}
-    if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-top'); socket.emit("gas", 1);}
-    if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
-    if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("gas", 0);}
+    if (e.key == "ArrowUp" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlUp");
+        elem.css('color', 'red');
+        socket.emit("gas", 1);
+    }
+    if (e.key == "ArrowUp" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlUp");
+        elem.css('color', 'black');
+        socket.emit("gas", 0);
+    }
+    if (e.key == "ArrowDown" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlDown");
+        elem.css('color', 'red');
+        socket.emit("gas", -1);
+    }
+    if (e.key == "ArrowDown" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlDown");
+        elem.css('color', 'black');
+        socket.emit("gas", 0);
+    }
 
     // Direction control
-    if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-left'); socket.emit("dir", -1);}
-    if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat){elem.removeClass().addClass('oi oi-caret-right'); socket.emit("dir", 1);}
-    if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
-    if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat){elem.removeClass().addClass('oi oi-media-pause'); socket.emit("dir", 0);}
+    if (e.key == "ArrowLeft" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlLeft");
+        elem.css('color', 'red');
+        socket.emit("dir", -1);
+    }
+    if (e.key == "ArrowLeft" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlLeft");
+        elem.css('color', 'black');
+        socket.emit("dir", 0);
+    }
+    if (e.key == "ArrowRight" && e.type == "keydown" && !e.repeat) {
+        var elem = $("#controlRight");
+        elem.css('color', 'red');
+        socket.emit("dir", 1);
+    }
+    if (e.key == "ArrowRight" && e.type == "keyup" && !e.repeat) {
+        var elem = $("#controlRight");
+        elem.css('color', 'black');
+        socket.emit("dir", 0);
+    }
 
 }
 
