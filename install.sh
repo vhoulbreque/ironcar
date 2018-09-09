@@ -1,8 +1,9 @@
 #!/bin/bash
 
-echo "-------------------------------"
-echo "IronCar install by XBrain team"
-echo "-------------------------------"
+echo "-----------------------------------------------------------------------
+This is the 'ironcar' install
+You can see the repository here: https://github.com/vinzeebreak/ironcar
+-----------------------------------------------------------------------"
 
 sudo apt-get update -y
 
@@ -58,8 +59,8 @@ if [ -f "$file" ]
 then
     if grep -Fxq 'blacklist spi-bcm2708' /etc/modprobe.d/raspi-blacklist.conf
     then
-        sudo sed -i 's/blacklist spi-bcm2708/#blacklist spi-bcm2708/' /etc/modprobe.d/raspi-blacklist.conf
-	sudo sed -i 's/blacklist i2c-bcm2708/#blacklist i2c-bcm2708/' /etc/modprobe.d/raspi-blacklist.conf
+      sudo sed -i 's/blacklist spi-bcm2708/#blacklist spi-bcm2708/' /etc/modprobe.d/raspi-blacklist.conf
+      sudo sed -i 's/blacklist i2c-bcm2708/#blacklist i2c-bcm2708/' /etc/modprobe.d/raspi-blacklist.conf
     fi
 else
     echo "no blacklist.conf file to modify, everything alright!"
@@ -105,9 +106,9 @@ if [ "$CONT" = "y" ]; then
     if grep -Fxq 'CONF_SWAPSIZE=100' /boot/config.txt
     then
         sudo sed -i 's/CONF_SWAPSIZE=100/CONF_SWAPSIZE=1000/' /etc/dphys-swapfile
-	sudo /etc/init.d/dphys-swapfile stop
-	sudo /etc/init.d/dphys-swapfile start
-	echo "swap size set to 1000MB"
+        sudo /etc/init.d/dphys-swapfile stop
+        sudo /etc/init.d/dphys-swapfile start
+        echo "swap size set to 1000MB"
     else
         echo "SWAPSIZE alsready modified, please modify it by hand if you want to change it again"
     fi
