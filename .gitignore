@@ -4,7 +4,7 @@ __MACOSX
 # Python
 __pycache__
 *.pyc
-
+venv/*
 # Generation
 stream
 datasets
