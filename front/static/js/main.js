@@ -353,7 +353,7 @@ socket.on("model_loaded", function(data) {
 
 
 socket.on('picture_stream', function(data) {
-    data = { image: true, buffer: img_base64, index: index_class}
+    //data = { image: true, buffer: img_base64, index: index_class}
 
     if (data.image) {
 
